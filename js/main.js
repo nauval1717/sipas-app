@@ -12,9 +12,15 @@ const pageTitles = {
     'pengaturan': 'Pengaturan Aplikasi'
 };
 
-// Fungsi perpindahan halaman antarmuka
+// Fungsi perpindahan halaman antarmuka (Dilengkapi validasi hak akses role)
 function switchPage(pageId, event) {
     if (event) event.preventDefault();
+
+    // Validasi Akses Halaman Khusus Admin
+    if (typeof isPageAllowed === 'function' && !isPageAllowed(pageId)) {
+        alert("Akses ditolak: Anda tidak memiliki hak akses untuk membuka halaman ini.");
+        return;
+    }
 
     // Sembunyikan seluruh seksi
     document.querySelectorAll('.page-section').forEach(section => {
@@ -44,7 +50,7 @@ function switchPage(pageId, event) {
     // Tutup sidebar jika dibuka pada layar ponsel
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('sidebar-overlay');
-    if (sidebar.classList.contains('open')) {
+    if (sidebar && sidebar.classList.contains('open')) {
         sidebar.classList.remove('open');
         overlay.classList.remove('active');
     }
@@ -54,6 +60,6 @@ function switchPage(pageId, event) {
 function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('sidebar-overlay');
-    sidebar.classList.toggle('open');
-    overlay.classList.toggle('active');
+    if (sidebar) sidebar.classList.toggle('open');
+    if (overlay) overlay.classList.toggle('active');
 }
