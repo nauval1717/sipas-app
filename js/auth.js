@@ -1,16 +1,200 @@
-// Penanganan Login & Navigasi Hak Akses
-function handleLogin(event) {
-    event.preventDefault();
-    
-    // Tampilan awal (simulasi sukses sebelum koneksi full database)
-    document.getElementById("login-view").classList.add("hidden");
-    document.getElementById("app-view").classList.remove("hidden");
-    
-    document.getElementById("user-name").innerText = "Guru Penguji";
-    document.getElementById("user-role").innerText = "Guru";
+// Status Pengguna Aktif
+let currentUser = null;
+let currentProfile = null;
+
+// Daftar halaman khusus Admin
+const ADMIN_ONLY_PAGES = ['guru', 'kelas', 'karakter', 'pengaturan'];
+
+// Inisialisasi Sesi saat Aplikasi Diberdayakan
+document.addEventListener('DOMContentLoaded', async () => {
+    initAuthListener();
+    await checkCurrentSession();
+});
+
+// Mendengarkan Perubahan Status Otentikasi (Sesi Kedaluwarsa / Logout)
+function initAuthListener() {
+    if (!db) return;
+
+    db.auth.onAuthStateChange(async (event, session) => {
+        if (event === 'SIGNED_OUT' || !session) {
+            resetAppState();
+        } else if (event === 'TOKEN_REFRESHED') {
+            currentUser = session.user;
+        }
+    });
 }
 
-function handleLogout() {
+// Memeriksa Sesi Pengguna Aktif
+async function checkCurrentSession() {
+    if (!db) return;
+
+    try {
+        const { data: { session }, error } = await db.auth.getSession();
+        if (error || !session) {
+            resetAppState();
+            return;
+        }
+
+        currentUser = session.user;
+        await loadUserProfile(currentUser.id);
+    } catch (err) {
+        console.error("Gagal memeriksa sesi:", err);
+        resetAppState();
+    }
+}
+
+// Memuat Data Profil & Role Pengguna dari Database
+async function loadUserProfile(userId) {
+    showLoginLoading(true);
+    try {
+        const { data, error } = await db
+            .from('profiles')
+            .select('id, nama_lengkap, role')
+            .eq('id', userId)
+            .single();
+
+        if (error || !data) {
+            showLoginError("Profil pengguna tidak ditemukan di database.");
+            await db.auth.signOut();
+            resetAppState();
+            return;
+        }
+
+        currentProfile = data;
+        renderUserInterface();
+    } catch (err) {
+        showLoginError("Terjadi kesalahan saat memuat profil.");
+        resetAppState();
+    } finally {
+        showLoginLoading(false);
+    }
+}
+
+// Penanganan Formulir Login Email & Password (Menggantikan versi lama)
+async function handleLogin(event) {
+    event.preventDefault();
+    hideLoginError();
+
+    if (!db) {
+        showLoginError("Supabase belum dikonfigurasi. Periksa URL dan Anon Key pada js/supabase-config.js.");
+        return;
+    }
+
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+
+    showLoginLoading(true);
+
+    try {
+        const { data, error } = await db.auth.signInWithPassword({
+            email: email,
+            password: password
+        });
+
+        if (error) {
+            showLoginError(getAuthErrorMessage(error.message));
+            showLoginLoading(false);
+            return;
+        }
+
+        currentUser = data.user;
+        await loadUserProfile(currentUser.id);
+    } catch (err) {
+        showLoginError("Gagal me-respons permintaan login. Periksa koneksi internet Anda.");
+        showLoginLoading(false);
+    }
+}
+
+// Pembaruan Antarmuka Berdasarkan Role & Pengguna
+function renderUserInterface() {
+    document.getElementById("login-view").classList.add("hidden");
+    document.getElementById("app-view").classList.remove("hidden");
+
+    document.getElementById("user-name").innerText = currentProfile.nama_lengkap || currentUser.email;
+    document.getElementById("user-role").innerText = currentProfile.role.toUpperCase();
+
+    applyRoleRestrictions(currentProfile.role);
+    
+    // Pastikan fungsi switchPage ada di main.js Anda
+    if (typeof switchPage === 'function') {
+        switchPage('dashboard');
+    }
+}
+
+// Membatasi Navigasi Sesuai Hak Akses Pengguna
+function applyRoleRestrictions(role) {
+    const adminElements = document.querySelectorAll('[data-role="admin"]');
+    
+    adminElements.forEach(el => {
+        if (role === 'admin') {
+            el.classList.remove('hidden');
+        } else {
+            el.classList.add('hidden');
+        }
+    });
+}
+
+// Memeriksa Akses Halaman (Digunakan oleh main.js)
+function isPageAllowed(pageId) {
+    if (!currentProfile) return false;
+    if (currentProfile.role === 'guru' && ADMIN_ONLY_PAGES.includes(pageId)) {
+        return false;
+    }
+    return true;
+}
+
+// Penanganan Logout (Menghubungkan Supabase Auth dengan Tampilan)
+async function handleLogout() {
+    if (db) {
+        await db.auth.signOut();
+    }
+    resetAppState();
+}
+
+// Mengembalikan Aplikasi ke Tampilan Login
+function resetAppState() {
+    currentUser = null;
+    currentProfile = null;
+
+    const loginForm = document.getElementById("login-form");
+    if (loginForm) loginForm.reset();
+
     document.getElementById("app-view").classList.add("hidden");
     document.getElementById("login-view").classList.remove("hidden");
+    showLoginLoading(false);
+}
+
+// Menampilkan Pesan Kesalahan Login
+function showLoginError(msg) {
+    const alertBox = document.getElementById("login-alert");
+    if (alertBox) {
+        alertBox.innerText = msg;
+        alertBox.classList.remove("hidden");
+    }
+}
+
+function hideLoginError() {
+    const alertBox = document.getElementById("login-alert");
+    if (alertBox) {
+        alertBox.classList.add("hidden");
+    }
+}
+
+function showLoginLoading(isLoading) {
+    const btn = document.querySelector("#login-form button[type='submit']");
+    if (btn) {
+        btn.disabled = isLoading;
+        btn.innerText = isLoading ? "Memproses..." : "Masuk ke Aplikasi";
+    }
+}
+
+// Menerjemahkan Pesan Kesalahan Supabase Auth ke Bahasa Indonesia
+function getAuthErrorMessage(message) {
+    if (message.includes("Invalid login credentials")) {
+        return "Email atau kata sandi salah.";
+    }
+    if (message.includes("Email not confirmed")) {
+        return "Email Anda belum dikonfirmasi.";
+    }
+    return "Terjadi kesalahan login: " + message;
 }
