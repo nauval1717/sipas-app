@@ -19,6 +19,8 @@
                 <h2>Sistem Penilaian Sikap Siswa</h2>
                 <p>Silakan masuk dengan akun Anda</p>
             </div>
+            <!-- Sisipkan di dalam div.login-card tepat di atas tag <form> -->
+            <div id="login-alert" class="alert alert-danger hidden"></div>
             <form id="login-form" onsubmit="handleLogin(event)">
                 <div class="form-group">
                     <label for="email">Email</label>
@@ -57,7 +59,22 @@
                 <a href="#" class="menu-item" onclick="switchPage('input-penilaian', event)">
                     <span class="icon">✏️</span> Input Penilaian
                 </a>
+                <div class="menu-label" data-role="admin">DATA MASTER</div>
+                <a href="#" class="menu-item" data-role="admin" onclick="switchPage('guru', event)">
+                <span class="icon">👨‍🏫</span> Data Guru
+                </a>
+                <a href="#" class="menu-item" data-role="admin" onclick="switchPage('kelas', event)">
+                <span class="icon">🏫</span> Data Kelas
+                </a>
+                <a href="#" class="menu-item" data-role="admin" onclick="switchPage('karakter', event)">
+                <span class="icon">⭐</span> Data Karakter
+                </a>
 
+                <div class="menu-label" data-role="admin">SISTEM</div>
+                <a href="#" class="menu-item" data-role="admin" onclick="switchPage('pengaturan', event)">
+                <span class="icon">⚙️</span> Pengaturan
+                </a>
+                
                 <div class="menu-label">DATA MASTER</div>
                 <a href="#" class="menu-item" onclick="switchPage('siswa', event)">
                     <span class="icon">👨‍🎓</span> Data Siswa
