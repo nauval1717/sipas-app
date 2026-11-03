@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIPAS - Sistem Informasi Penilaian Sikap Siswa</title>
+    <!-- Supabase JS Client via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/mobile.css">
+</head>
+<body>
+
+    <!-- ================= HALAMAN LOGIN ================= -->
+    <div id="login-view" class="login-wrapper">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="app-logo">SIPAS</div>
+                <h2>Sistem Penilaian Sikap Siswa</h2>
+                <p>Silakan masuk dengan akun Anda</p>
+            </div>
+            <form id="login-form" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" class="form-input" placeholder="nama@sekolah.sch.id" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Kata Sandi</label>
+                    <input type="password" id="password" class="form-input" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Masuk ke Aplikasi</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= TAMPILAN UTAMA APLIKASI ================= -->
+    <div id="app-view" class="app-wrapper hidden">
+        
+        <!-- Overlay untuk HP saat Sidebar terbuka -->
+        <div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+        <!-- Sidebar Navigasi -->
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <div class="brand">
+                    <span class="brand-logo">SIPAS</span>
+                    <span class="brand-sub">Versi 1.0</span>
+                </div>
+                <button class="btn-close-sidebar" onclick="toggleSidebar()">&times;</button>
+            </div>
+
+            <nav class="sidebar-menu">
+                <div class="menu-label">UTAMA</div>
+                <a href="#" class="menu-item active" onclick="switchPage('dashboard', event)">
+                    <span class="icon">📊</span> Dashboard
+                </a>
+                <a href="#" class="menu-item" onclick="switchPage('input-penilaian', event)">
+                    <span class="icon">✏️</span> Input Penilaian
+                </a>
+
+                <div class="menu-label">DATA MASTER</div>
+                <a href="#" class="menu-item" onclick="switchPage('siswa', event)">
+                    <span class="icon">👨‍🎓</span> Data Siswa
+                </a>
+                <a href="#" class="menu-item" onclick="switchPage('guru', event)">
+                    <span class="icon">👨‍🏫</span> Data Guru
+                </a>
+                <a href="#" class="menu-item" onclick="switchPage('kelas', event)">
+                    <span class="icon">🏫</span> Data Kelas
+                </a>
+                <a href="#" class="menu-item" onclick="switchPage('karakter', event)">
+                    <span class="icon">⭐</span> Data Karakter
+                </a>
+
+                <div class="menu-label">REKAP & LAPORAN</div>
+                <a href="#" class="menu-item" onclick="switchPage('skor-siswa', event)">
+                    <span class="icon">📈</span> Skor & Rekap Siswa
+                </a>
+                <a href="#" class="menu-item" onclick="switchPage('pelanggaran', event)">
+                    <span class="icon">⚠️</span> Pelanggaran Siswa
+                </a>
+                <a href="#" class="menu-item" onclick="switchPage('laporan', event)">
+                    <span class="icon">📄</span> Laporan & Ekspor
+                </a>
+
+                <div class="menu-label">SISTEM</div>
+                <a href="#" class="menu-item" onclick="switchPage('pengaturan', event)">
+                    <span class="icon">⚙️</span> Pengaturan
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="btn btn-logout" onclick="handleLogout()">
+                    <span class="icon">🚪</span> Keluar
+                </button>
+            </div>
+        </aside>
+
+        <!-- Area Konten Utama -->
+        <div class="main-content">
+            
+            <!-- Topbar Header -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button class="btn-hamburger" onclick="toggleSidebar()">☰</button>
+                    <h1 id="page-title">Dashboard</h1>
+                </div>
+                <div class="topbar-right">
+                    <div class="user-info">
+                        <span id="user-name" class="user-name">Pengguna</span>
+                        <span id="user-role" class="user-role">Guru</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Halaman Dynamic (Views) -->
+            <main class="content-body">
+                
+                <!-- 1. DASHBOARD -->
+                <section id="page-dashboard" class="page-section">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon bg-blue">👨‍🎓</div>
+                            <div class="stat-info">
+                                <h3>Total Siswa</h3>
+                                <p class="stat-value" id="stat-siswa">-</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon bg-green">👍</div>
+                            <div class="stat-info">
+                                <h3>Sikap Positif</h3>
+                                <p class="stat-value text-success" id="stat-positif">-</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon bg-red">👎</div>
+                            <div class="stat-info">
+                                <h3>Sikap Negatif</h3>
+                                <p class="stat-value text-danger" id="stat-negatif">-</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon bg-orange">🏫</div>
+                            <div class="stat-info">
+                                <h3>Total Kelas</h3>
+                                <p class="stat-value" id="stat-kelas">-</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h2>Penilaian Terbaru</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Tanggal</th>
+                                            <th>Siswa</th>
+                                            <th>Kelas</th>
+                                            <th>Jenis</th>
+                                            <th>Perilaku</th>
+                                            <th>Pencatat</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="table-recent-assessments">
+                                        <tr><td colspan="6" class="text-center text-muted">Belum ada data penilaian.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 2. DATA SISWA -->
+                <section id="page-siswa" class="page-section hidden">
+                    <div class="card">
+                        <div class="card-header flex-between">
+                            <h2>Kelola Data Siswa</h2>
+                            <button class="btn btn-primary">+ Tambah Siswa</button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>NISN</th>
+                                            <th>Nama Lengkap</th>
+                                            <th>L/P</th>
+                                            <th>Kelas</th>
+                                            <th>Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="table-siswa">
+                                        <tr><td colspan="5" class="text-center text-muted">Data siswa akan ditampilkan di sini.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 3. DATA GURU -->
+                <section id="page-guru" class="page-section hidden">
+                    <div class="card">
+                        <div class="card-header flex-between">
+                            <h2>Kelola Data Guru</h2>
+                            <button class="btn btn-primary">+ Tambah Guru</button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>NIP</th>
+                                            <th>Nama Lengkap</th>
+                                            <th>No. HP</th>
+                                            <th>Status</th>
+                                            <th>Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="table-guru">
+                                        <tr><td colspan="5" class="text-center text-muted">Data guru akan ditampilkan di sini.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 4. DATA KELAS -->
+                <section id="page-kelas" class="page-section hidden">
+                    <div class="card">
+                        <div class="card-header flex-between">
+                            <h2>Kelola Data Kelas</h2>
+                            <button class="btn btn-primary">+ Tambah Kelas</button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Nama Kelas</th>
+                                            <th>Wali Kelas</th>
+                                            <th>Tahun Ajaran</th>
+                                            <th>Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="table-kelas">
+                                        <tr><td colspan="4" class="text-center text-muted">Data kelas akan ditampilkan di sini.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 5. DATA KARAKTER -->
+                <section id="page-karakter" class="page-section hidden">
+                    <div class="card">
+                        <div class="card-header flex-between">
+                            <h2>Kategori & Master Perilaku</h2>
+                            <button class="btn btn-primary">+ Tambah Perilaku</button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Kategori</th>
+                                            <th>Nama Perilaku</th>
+                                            <th>Jenis</th>
+                                            <th>Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="table-karakter">
+                                        <tr><td colspan="4" class="text-center text-muted">Data kategori dan perilaku akan ditampilkan di sini.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 6. INPUT PENILAIAN -->
+                <section id="page-input-penilaian" class="page-section hidden">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Formulir Input Penilaian Sikap</h2>
+                        </div>
+                        <div class="card-body">
+                            <form id="form-penilaian" onsubmit="event.preventDefault();">
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label>Tanggal</label>
+                                        <input type="date" class="form-input" id="input-tanggal" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Kelas</label>
+                                        <select class="form-input" id="select-kelas">
+                                            <option value="">-- Pilih Kelas --</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Siswa</label>
+                                        <select class="form-input" id="select-siswa">
+                                            <option value="">-- Pilih Siswa --</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Perilaku</label>
+                                        <select class="form-input" id="select-perilaku">
+                                            <option value="">-- Pilih Perilaku --</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group mt-3">
+                                    <label>Catatan Kejadian</label>
+                                    <textarea class="form-input" rows="3" placeholder="Tuliskan deskripsi singkat kejadian di lapangan..."></textarea>
+                                </div>
+                                <button type="button" class="btn btn-primary mt-3">Simpan Penilaian</button>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 7. SKOR SISWA -->
+                <section id="page-skor-siswa" class="page-section hidden">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Rekapitulasi Total Kejadian Positif & Negatif</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Nama Siswa</th>
+                                            <th>Kelas</th>
+                                            <th>Kejadian Positif</th>
+                                            <th>Kejadian Negatif</th>
+                                            <th>Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="table-skor">
+                                        <tr><td colspan="5" class="text-center text-muted">Rekapitulasi skor siswa akan ditampilkan di sini.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 8. PELANGGARAN SISWA -->
+                <section id="page-pelanggaran" class="page-section hidden">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Daftar Catatan Pelanggaran Siswa</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Tanggal</th>
+                                            <th>Nama Siswa</th>
+                                            <th>Kelas</th>
+                                            <th>Bentuk Pelanggaran</th>
+                                            <th>Pencatat</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="table-pelanggaran">
+                                        <tr><td colspan="5" class="text-center text-muted">Daftar pelanggaran akan ditampilkan di sini.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 9. LAPORAN -->
+                <section id="page-laporan" class="page-section hidden">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Pusat Laporan & Ekspor Excel</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Filter Kelas</label>
+                                    <select class="form-input"><option value="">Semua Kelas</option></select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Filter Semester</label>
+                                    <select class="form-input">
+                                        <option value="">Ganjil</option>
+                                        <option value="">Genap</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button class="btn btn-success mt-3">📊 Unduh Laporan Excel (Multi-Sheet)</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 10. PENGATURAN -->
+                <section id="page-pengaturan" class="page-section hidden">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Pengaturan Identitas Sekolah</h2>
+                        </div>
+                        <div class="card-body">
+                            <form onsubmit="event.preventDefault();">
+                                <div class="form-group">
+                                    <label>Nama Sekolah</label>
+                                    <input type="text" class="form-input" placeholder="SD/SMP/SMA Sekolah">
+                                </div>
+                                <div class="form-group mt-3">
+                                    <label>Nama Kepala Sekolah</label>
+                                    <input type="text" class="form-input" placeholder="Nama Kepala Sekolah">
+                                </div>
+                                <button type="button" class="btn btn-primary mt-3">Simpan Perubahan</button>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- Berkas Script JS -->
+    <script src="js/supabase-config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
