@@ -105,20 +105,26 @@ async function handleLogin(event) {
     }
 }
 
-// Pembaruan Antarmuka Berdasarkan Role & Pengguna
+// --- PEMBARUAN RENDER ANTARMUKA (TRANSISI BERHASIL MASUK) ---
 function renderUserInterface() {
-    document.getElementById("login-view").classList.add("hidden");
-    document.getElementById("app-view").classList.remove("hidden");
+    const loginView = document.getElementById("login-view");
+    const appView = document.getElementById("app-view");
+
+    loginView.classList.add("hidden");
+    appView.classList.remove("hidden");
+    appView.classList.add("page-fade-in");
 
     document.getElementById("user-name").innerText = currentProfile.nama_lengkap || currentUser.email;
     document.getElementById("user-role").innerText = currentProfile.role.toUpperCase();
 
     applyRoleRestrictions(currentProfile.role);
     
-    // Pastikan fungsi switchPage ada di main.js Anda
     if (typeof switchPage === 'function') {
         switchPage('dashboard');
     }
+
+    // Tampilkan Animasi Notifikasi Berhasil Masuk
+    showToast(`Berhasil masuk! Selamat datang, ${currentProfile.nama_lengkap || 'Pengguna'}.`, 'success');
 }
 
 // Membatasi Navigasi Sesuai Hak Akses Pengguna
@@ -134,23 +140,32 @@ function applyRoleRestrictions(role) {
     });
 }
 
-// Memeriksa Akses Halaman (Digunakan oleh main.js)
-function isPageAllowed(pageId) {
-    if (!currentProfile) return false;
-    if (currentProfile.role === 'guru' && ADMIN_ONLY_PAGES.includes(pageId)) {
-        return false;
+/// --- LOGIKA MODAL KONFIRMASI LOGOUT ---
+function handleLogout() {
+    // Tampilkan Modal Dialog Konfirmasi
+    const modal = document.getElementById("logout-modal");
+    if (modal) {
+        modal.classList.remove("hidden");
     }
-    return true;
 }
 
-// Penanganan Logout (Menghubungkan Supabase Auth dengan Tampilan)
-async function handleLogout() {
+function closeLogoutModal() {
+    const modal = document.getElementById("logout-modal");
+    if (modal) {
+        modal.classList.add("hidden");
+    }
+}
+
+async function confirmLogout() {
+    closeLogoutModal();
+
     if (db) {
         await db.auth.signOut();
     }
-    resetAppState();
-}
 
+    resetAppState();
+    showToast("Anda telah keluar dari aplikasi.", "info");
+}
 // Mengembalikan Aplikasi ke Tampilan Login
 function resetAppState() {
     currentUser = null;
@@ -197,4 +212,28 @@ function getAuthErrorMessage(message) {
         return "Email Anda belum dikonfirmasi.";
     }
     return "Terjadi kesalahan login: " + message;
+}
+// --- FUNGSI PEMBANTU NOTIFIKASI TOAST ---
+function showToast(message, type = 'success', duration = 3000) {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const iconMap = {
+        'success': '✅',
+        'info': 'ℹ️',
+        'error': '⚠️'
+    };
+
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `<span>${iconMap[type] || '🔔'}</span> <span>${message}</span>`;
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.add('fade-out');
+        toast.addEventListener('animationend', () => {
+            toast.remove();
+        });
+    }, duration);
 }
