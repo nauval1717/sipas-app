@@ -816,3 +816,85 @@ window.openModalImportSiswa = openModalImportSiswa;
 window.processExcelFile = processExcelFile;
 window.commitImportSiswa = commitImportSiswa;
 window.closeModal = closeModal;
+// --- SINKRONISASI DASHBOARD UTAMA ---
+async function loadDashboardStats() {
+    if (!window.db) return;
+    try {
+        const { count: totalSiswa } = await window.db.from('siswa').select('*', { count: 'exact', head: true });
+        const { count: totalKelas } = await window.db.from('kelas').select('*', { count: 'exact', head: true });
+        const { count: totalPositif } = await window.db.from('penilaian_sikap').select('*', { count: 'exact', head: true }).eq('jenis_sikap', 'positif');
+        const { count: totalNegatif } = await window.db.from('penilaian_sikap').select('*', { count: 'exact', head: true }).eq('jenis_sikap', 'negatif');
+
+        if (document.getElementById('stat-siswa')) document.getElementById('stat-siswa').innerText = totalSiswa || 0;
+        if (document.getElementById('stat-kelas')) document.getElementById('stat-kelas').innerText = totalKelas || 0;
+        if (document.getElementById('stat-positif')) document.getElementById('stat-positif').innerText = totalPositif || 0;
+        if (document.getElementById('stat-negatif')) document.getElementById('stat-negatif').innerText = totalNegatif || 0;
+    } catch (err) {
+        console.error("Gagal memuat statistik dashboard:", err);
+    }
+}
+
+// Tambahkan pemicu dashboard pada init
+const originalInit = initDataMaster;
+initDataMaster = async function() {
+    await originalInit();
+    await loadDashboardStats();
+};
+
+// --- UNDUH TEMPLATE EXCEL ---
+function downloadTemplateSiswa() {
+    const data = [{ "NIS": "1001", "NISN": "0012345678", "Nama Lengkap": "Budi Santoso", "Kelas": "VII A" }];
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Template_Siswa");
+    XLSX.writeFile(wb, "Template_Data_Siswa.xlsx");
+}
+
+function downloadTemplateGuru() {
+    const data = [{ "NIP": "198501012010011001", "Nama Lengkap": "Ahmad Fauzi, S.Pd", "No HP": "081234567890" }];
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Template_Guru");
+    XLSX.writeFile(wb, "Template_Data_Guru.xlsx");
+}
+
+// --- HAPUS GURU ---
+async function deleteGuru(guruId, nama) {
+    if (!confirm(`Apakah Anda yakin ingin menghapus data guru ${nama}?`)) return;
+    try {
+        const { error } = await window.db.from('guru').delete().eq('id', guruId);
+        if (error) throw error;
+        if (window.showToast) showToast("Data guru berhasil dihapus.", "success");
+        await loadGuru();
+    } catch (err) {
+        if (window.showToast) showToast("Gagal menghapus guru: " + err.message, "error");
+    }
+}
+
+// --- KATEGORI KARAKTER DINAMIS ---
+function openModalKategoriKarakter() {
+    const modal = document.getElementById('modal-kategori-karakter');
+    if (modal) modal.classList.remove('hidden');
+}
+
+async function saveKategoriKarakter(e) {
+    e.preventDefault();
+    if (!window.db) return;
+    const nama_kategori = document.getElementById('kategori-nama').value.trim();
+    try {
+        const { error } = await window.db.from('kategori_karakter').insert([{ nama_kategori }]);
+        if (error) throw error;
+        if (window.showToast) showToast("Kategori karakter ditambahkan.", "success");
+        closeModal('modal-kategori-karakter');
+        await loadKategoriKarakter();
+    } catch (err) {
+        if (window.showToast) showToast("Gagal menyimpan kategori: " + err.message, "error");
+    }
+}
+
+// Export fungsi ke window
+window.downloadTemplateSiswa = downloadTemplateSiswa;
+window.downloadTemplateGuru = downloadTemplateGuru;
+window.deleteGuru = deleteGuru;
+window.openModalKategoriKarakter = openModalKategoriKarakter;
+window.saveKategoriKarakter = saveKategoriKarakter;
