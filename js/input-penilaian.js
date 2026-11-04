@@ -35,7 +35,8 @@ async function initInputPenilaian() {
 async function loadPenilaianDependencies() {
     try {
         const [resKelas, resSiswa, resKategori, resPerilaku] = await Promise.all([
-            window.db.from('kelas').select('id, nama_kelas').order('nama_kelas'),
+            // Tambahkan kolom tahun_ajaran_id pada select kelas
+            window.db.from('kelas').select('id, nama_kelas, tahun_ajaran_id').order('nama_kelas'),
             window.db.from('siswa').select('id, nis, nama_lengkap, kelas_id_aktif').order('nama_lengkap'),
             window.db.from('kategori_karakter').select('id, nama_kategori').order('nama_kategori'),
             window.db.from('master_perilaku').select('id, nama_perilaku, jenis, kategori_id').order('nama_perilaku')
@@ -153,10 +154,15 @@ async function savePenilaian(event) {
             btnSubmit.innerHTML = `<span>⏳ Menyimpan...</span>`;
         }
 
+        // Ambil tahun_ajaran_id dari kelas yang dipilih
+        const kelasObj = cachePenilaianDep.kelas.find(k => k.id === kelas_id);
+        const tahun_ajaran_id = kelasObj ? kelasObj.tahun_ajaran_id : null;
+
         const { error } = await window.db.from('penilaian_sikap').insert([{
             tanggal,
             siswa_id,
             kelas_id,
+            tahun_ajaran_id, // <-- Sertakan variabel ini
             perilaku_id,
             jenis_sikap,
             catatan: catatan || null,
