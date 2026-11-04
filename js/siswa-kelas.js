@@ -1,33 +1,258 @@
-// Storage Cache Data
+// Storage Cache Data Master
 let cacheKelas = [];
 let cacheSiswa = [];
 let cacheGuru = [];
 let cacheTA = [];
+let cacheKategori = [];
+let cachePerilaku = [];
 let pendingImportData = [];
 
-// Inisialisasi Otomatis saat DOM Siap
 document.addEventListener('DOMContentLoaded', () => {
     initDataMaster();
 });
 
 async function initDataMaster() {
-    if (!.db) return;
+    if (!window.db) return;
     await Promise.all([
         loadTahunAjaran(),
-        loadGuruList(),
+        loadGuru(),
+        loadKategoriKarakter(),
         loadKelas(),
-        loadSiswa()
+        loadSiswa(),
+        loadKarakter()
     ]);
 }
 
-// Fungsi Helper Tutup Modal
 function closeModal(modalId) {
     const el = document.getElementById(modalId);
     if (el) el.classList.add('hidden');
 }
 
 // ==========================================
-// 1. KELOLA DATA KELAS
+// 1. DATA GURU
+// ==========================================
+async function loadGuru() {
+    if (!window.db) return;
+    try {
+        const { data, error } = await window.db
+            .from('guru')
+            .select('id, nip, no_hp, status_aktif, profile_id, profiles(nama_lengkap)');
+
+        if (error) throw error;
+        cacheGuru = data || [];
+        renderTableGuru();
+    } catch (err) {
+        if (window.showToast) showToast("Gagal memuat data guru: " + err.message, "error");
+    }
+}
+
+function renderTableGuru() {
+    const tbody = document.getElementById('table-guru');
+    if (!tbody) return;
+
+    if (cacheGuru.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">Belum ada data guru.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = cacheGuru.map(g => `
+        <tr>
+            <td>${g.nip || '-'}</td>
+            <td><strong>${g.profiles?.nama_lengkap || 'Tanpa Nama'}</strong></td>
+            <td>${g.no_hp || '-'}</td>
+            <td><span class="badge text-success">Aktif</span></td>
+            <td>
+                <button class="btn btn-secondary" style="padding: 4px 8px;" onclick="openModalGuru('${g.id}')">Edit</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function openModalGuru(guruId = null) {
+    const modal = document.getElementById('modal-guru');
+    if (!modal) return;
+
+    const form = document.getElementById('form-guru');
+    if (form) form.reset();
+
+    if (guruId) {
+        document.getElementById('modal-guru-title').innerText = "Edit Data Guru";
+        const g = cacheGuru.find(item => item.id === guruId);
+        if (g) {
+            document.getElementById('guru-id').value = g.id;
+            document.getElementById('guru-nip').value = g.nip || '';
+            document.getElementById('guru-nama').value = g.profiles?.nama_lengkap || '';
+            document.getElementById('guru-hp').value = g.no_hp || '';
+        }
+    } else {
+        document.getElementById('modal-guru-title').innerText = "Tambah Data Guru";
+        document.getElementById('guru-id').value = '';
+    }
+
+    modal.classList.remove('hidden');
+}
+
+async function saveGuru(e) {
+    e.preventDefault();
+    if (!window.db) return;
+
+    const id = document.getElementById('guru-id').value;
+    const nip = document.getElementById('guru-nip').value.trim();
+    const nama = document.getElementById('guru-nama').value.trim();
+    const no_hp = document.getElementById('guru-hp').value.trim();
+
+    try {
+        if (id) {
+            const g = cacheGuru.find(item => item.id === id);
+            if (g && g.profile_id) {
+                await window.db.from('profiles').update({ nama_lengkap: nama }).eq('id', g.profile_id);
+            }
+            const { error } = await window.db.from('guru').update({ nip, no_hp }).eq('id', id);
+            if (error) throw error;
+            if (window.showToast) showToast("Data guru diperbarui.", "success");
+        } else {
+            const { data: newProf, error: errProf } = await window.db.from('profiles').insert([{
+                nama_lengkap: nama,
+                role: 'guru'
+            }]).select().single();
+
+            if (errProf) throw errProf;
+
+            const { error: errGuru } = await window.db.from('guru').insert([{
+                profile_id: newProf.id,
+                nip,
+                no_hp
+            }]);
+            if (errGuru) throw errGuru;
+
+            if (window.showToast) showToast("Guru baru berhasil ditambahkan.", "success");
+        }
+        closeModal('modal-guru');
+        await loadGuru();
+    } catch (err) {
+        if (window.showToast) showToast("Gagal menyimpan guru: " + err.message, "error");
+    }
+}
+
+// ==========================================
+// 2. DATA KARAKTER & PERILAKU
+// ==========================================
+async function loadKategoriKarakter() {
+    if (!window.db) return;
+    const { data } = await window.db.from('kategori_karakter').select('*');
+    cacheKategori = data || [];
+
+    // Buat data kategori bawaan jika di database masih kosong
+    if (cacheKategori.length === 0) {
+        const defaultKat = [
+            { nama_kategori: 'Kedisiplinan' },
+            { nama_kategori: 'Kejujuran' },
+            { nama_kategori: 'Tanggung Jawab' },
+            { nama_kategori: 'Sopan Santun' }
+        ];
+        const { data: inserted } = await window.db.from('kategori_karakter').insert(defaultKat).select();
+        cacheKategori = inserted || [];
+    }
+}
+
+async function loadKarakter() {
+    if (!window.db) return;
+    try {
+        const { data, error } = await window.db
+            .from('master_perilaku')
+            .select('id, nama_perilaku, jenis, kategori_id, kategori_karakter(nama_kategori)');
+
+        if (error) throw error;
+        cachePerilaku = data || [];
+        renderTableKarakter();
+    } catch (err) {
+        if (window.showToast) showToast("Gagal memuat data perilaku: " + err.message, "error");
+    }
+}
+
+function renderTableKarakter() {
+    const tbody = document.getElementById('table-karakter');
+    if (!tbody) return;
+
+    if (cachePerilaku.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">Belum ada data perilaku.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = cachePerilaku.map(p => `
+        <tr>
+            <td>${p.kategori_karakter?.nama_kategori || '-'}</td>
+            <td><strong>${p.nama_perilaku}</strong></td>
+            <td>
+                <span class="badge ${p.jenis === 'positif' ? 'text-success' : 'text-danger'}">
+                    ${p.jenis.toUpperCase()}
+                </span>
+            </td>
+            <td>
+                <button class="btn btn-secondary" style="padding: 4px 8px;" onclick="openModalKarakter('${p.id}')">Edit</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function openModalKarakter(perilakuId = null) {
+    const modal = document.getElementById('modal-karakter');
+    if (!modal) return;
+
+    const form = document.getElementById('form-karakter');
+    if (form) form.reset();
+
+    const selectKat = document.getElementById('perilaku-kategori');
+    if (selectKat) {
+        selectKat.innerHTML = `<option value="">-- Pilih Kategori --</option>` + 
+            cacheKategori.map(k => `<option value="${k.id}">${k.nama_kategori}</option>`).join('');
+    }
+
+    if (perilakuId) {
+        document.getElementById('modal-karakter-title').innerText = "Edit Perilaku Sikap";
+        const p = cachePerilaku.find(item => item.id === perilakuId);
+        if (p) {
+            document.getElementById('perilaku-id').value = p.id;
+            document.getElementById('perilaku-kategori').value = p.kategori_id || '';
+            document.getElementById('perilaku-nama').value = p.nama_perilaku;
+            document.getElementById('perilaku-jenis').value = p.jenis;
+        }
+    } else {
+        document.getElementById('modal-karakter-title').innerText = "Tambah Perilaku Sikap";
+        document.getElementById('perilaku-id').value = '';
+    }
+
+    modal.classList.remove('hidden');
+}
+
+async function saveKarakter(e) {
+    e.preventDefault();
+    if (!window.db) return;
+
+    const id = document.getElementById('perilaku-id').value;
+    const kategori_id = document.getElementById('perilaku-kategori').value;
+    const nama_perilaku = document.getElementById('perilaku-nama').value.trim();
+    const jenis = document.getElementById('perilaku-jenis').value;
+
+    try {
+        if (id) {
+            const { error } = await window.db.from('master_perilaku').update({ kategori_id, nama_perilaku, jenis }).eq('id', id);
+            if (error) throw error;
+            if (window.showToast) showToast("Perilaku berhasil diperbarui.", "success");
+        } else {
+            const { error } = await window.db.from('master_perilaku').insert([{ kategori_id, nama_perilaku, jenis }]);
+            if (error) throw error;
+            if (window.showToast) showToast("Perilaku baru berhasil ditambahkan.", "success");
+        }
+        closeModal('modal-karakter');
+        await loadKarakter();
+    } catch (err) {
+        if (window.showToast) showToast("Gagal menyimpan perilaku: " + err.message, "error");
+    }
+}
+
+// ==========================================
+// 3. DATA KELAS
 // ==========================================
 async function loadKelas() {
     if (!window.db) return;
@@ -118,8 +343,7 @@ async function openModalKelas(kelasId = null) {
     }
 
     if (kelasId) {
-        const title = document.getElementById('modal-kelas-title');
-        if (title) title.innerText = "Edit Kelas";
+        document.getElementById('modal-kelas-title').innerText = "Edit Kelas";
         const k = cacheKelas.find(item => item.id === kelasId);
         if (k) {
             document.getElementById('kelas-id').value = k.id;
@@ -128,8 +352,7 @@ async function openModalKelas(kelasId = null) {
             if (selectTA) selectTA.value = k.tahun_ajaran_id || '';
         }
     } else {
-        const title = document.getElementById('modal-kelas-title');
-        if (title) title.innerText = "Tambah Kelas";
+        document.getElementById('modal-kelas-title').innerText = "Tambah Kelas";
         document.getElementById('kelas-id').value = '';
     }
 
@@ -181,7 +404,7 @@ async function deleteKelas(id, nama, jumlahSiswa) {
 }
 
 // ==========================================
-// 2. KELOLA DATA SISWA
+// 4. DATA SISWA
 // ==========================================
 async function loadSiswa() {
     if (!window.db) return;
@@ -260,8 +483,7 @@ function openModalSiswa(siswaId = null) {
     populateDropdownKelas();
 
     if (siswaId) {
-        const title = document.getElementById('modal-siswa-title');
-        if (title) title.innerText = "Edit Siswa";
+        document.getElementById('modal-siswa-title').innerText = "Edit Siswa";
         const s = cacheSiswa.find(item => item.id === siswaId);
         if (s) {
             document.getElementById('siswa-id').value = s.id;
@@ -272,8 +494,7 @@ function openModalSiswa(siswaId = null) {
             document.getElementById('siswa-kelas').value = s.kelas_id_aktif || '';
         }
     } else {
-        const title = document.getElementById('modal-siswa-title');
-        if (title) title.innerText = "Tambah Siswa";
+        document.getElementById('modal-siswa-title').innerText = "Tambah Siswa";
         document.getElementById('siswa-id').value = '';
     }
 
@@ -424,8 +645,24 @@ async function confirmPindahKelas(e) {
 }
 
 // ==========================================
-// 3. FITUR IMPOR EXCEL SISWA
+// 5. HELPER TAHUN AJARAN & IMPOR EXCEL
 // ==========================================
+async function loadTahunAjaran() {
+    if (!window.db) return;
+    const { data } = await window.db.from('tahun_ajaran').select('id, tahun, semester');
+    cacheTA = data || [];
+
+    // Buat data Tahun Ajaran bawaan jika di database masih kosong
+    if (cacheTA.length === 0) {
+        const defaultTA = [
+            { tahun: '2025/2026', semester: 'Ganjil', is_aktif: true },
+            { tahun: '2025/2026', semester: 'Genap', is_aktif: false }
+        ];
+        const { data: inserted } = await window.db.from('tahun_ajaran').insert(defaultTA).select();
+        cacheTA = inserted || [];
+    }
+}
+
 function openModalImportSiswa() {
     document.getElementById('excel-file-input').value = '';
     document.getElementById('import-preview-area').classList.add('hidden');
@@ -557,35 +794,15 @@ async function commitImportSiswa() {
     }
 }
 
-async function loadGuruList() {
-    if (!window.db) return;
-    const { data } = await window.db.from('guru').select('id, profiles(nama_lengkap)');
-    cacheGuru = data || [];
-}
-
-async function loadTahunAjaran() {
-    if (!window.db) return;
-    const { data } = await window.db.from('tahun_ajaran').select('id, tahun, semester');
-    cacheTA = data || [];
-}
-
-// --- HANDLER SEMENTARA UNTUK GURU & KARAKTER ---
-function openModalGuru() {
-    alert("Formulir Tambah Guru siap dihubungkan pada tahap berikutnya.");
-}
-
-function openModalKarakter() {
-    alert("Formulir Tambah Perilaku/Karakter siap dihubungkan pada tahap berikutnya.");
-}
-
-// --- EKSPLISITKAN SELURUH FUNGSI MODAL DATA MASTER KE WINDOW ---
-window.openModalSiswa = openModalSiswa;
+// Eksplisitkan Seluruh Fungsi Modal ke Scope Window
 window.openModalGuru = openModalGuru;
-window.openModalKelas = openModalKelas;
+window.saveGuru = saveGuru;
 window.openModalKarakter = openModalKarakter;
-
+window.saveKarakter = saveKarakter;
+window.openModalKelas = openModalKelas;
 window.saveKelas = saveKelas;
 window.deleteKelas = deleteKelas;
+window.openModalSiswa = openModalSiswa;
 window.saveSiswa = saveSiswa;
 window.filterSiswa = filterSiswa;
 window.viewDetailSiswa = viewDetailSiswa;
