@@ -33,6 +33,11 @@ function switchPage(pageId, event) {
         targetPage.classList.remove('hidden');
     }
 
+    // Inisialisasi halaman Input Penilaian saat dibuka
+    if (pageId === 'input-penilaian' && window.initInputPenilaian) {
+        window.initInputPenilaian();
+    }
+
     // Perbarui judul halaman di bar topbar
     const titleElement = document.getElementById('page-title');
     if (titleElement && pageTitles[pageId]) {
