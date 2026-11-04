@@ -803,69 +803,57 @@
 </div>
 
 <!-- MODAL EDIT CATATAN PENILAIAN -->
-<div id="modal-edit-penilaian" class="modal-overlay hidden">
-    <div class="modal-box">
-        <div class="modal-header">
-            <h3>Edit Catatan Penilaian</h3>
+    <div id="modal-edit-penilaian" class="modal-overlay hidden">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>Edit Catatan Penilaian</h3>
+            </div>
+            <form onsubmit="saveEditPenilaian(event)">
+                <input type="hidden" id="edit-penilaian-id">
+                <input type="hidden" id="edit-catatan-lama">
+                <div class="modal-body">
+                    <p id="edit-siswa-info" class="mb-3 text-muted" style="font-weight: 500;"></p>
+                    <div class="form-group">
+                        <label>Catatan / Keterangan Baru</label>
+                        <textarea id="edit-catatan-baru" class="form-input" rows="4" placeholder="Tuliskan perbaikan catatan kejadian..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modal-edit-penilaian')">Batal</button>
+                    <button type="submit" id="btn-simpan-edit-penilaian" class="btn btn-primary">Simpan Perubahan</button>
+                </div>
+            </form>
         </div>
-        <form id="form-edit-penilaian" onsubmit="saveEditPenilaian(event)">
-            <input type="hidden" id="edit-penilaian-id">
-            <div class="modal-body">
-                <div id="edit-penilaian-info" class="mb-3"></div>
+    </div>
 
-                <div class="form-group">
-                    <label for="edit-penilaian-tanggal">Tanggal Kejadian <span class="text-danger">*</span></label>
-                    <input type="date" id="edit-penilaian-tanggal" class="form-input" required>
-                </div>
-                <div class="form-group mt-3">
-                    <label for="edit-penilaian-perilaku">Perilaku Sikap <span class="text-danger">*</span></label>
-                    <select id="edit-penilaian-perilaku" class="form-input" required>
-                        <option value="">-- Pilih Perilaku --</option>
-                    </select>
-                </div>
-                <div class="form-group mt-3">
-                    <label for="edit-penilaian-catatan">Keterangan / Catatan Kejadian</label>
-                    <textarea id="edit-penilaian-catatan" class="form-input" rows="4" placeholder="Tuliskan deskripsi singkat kejadian..."></textarea>
+    <!-- MODAL RIWAYAT PERUBAHAN CATATAN -->
+    <div id="modal-history-penilaian" class="modal-overlay hidden">
+        <div class="modal-box" style="max-width: 650px;">
+            <div class="modal-header">
+                <h3>Jejak Riwayat Perubahan Catatan</h3>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Waktu & Pengubah</th>
+                                <th>Catatan Sebelum</th>
+                                <th>Catatan Sesudah</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-history-penilaian">
+                            <tr><td colspan="3" class="text-center">Memuat riwayat...</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeModal('modal-edit-penilaian')">Batal</button>
-                <button type="submit" id="btn-simpan-edit-penilaian" class="btn btn-primary">Simpan Perubahan</button>
+                <button type="button" class="btn btn-secondary" onclick="closeModal('modal-history-penilaian')">Tutup</button>
             </div>
-        </form>
+        </div>
     </div>
-</div>
 
-<!-- MODAL RIWAYAT PERUBAHAN PENILAIAN -->
-<div id="modal-riwayat-penilaian" class="modal-overlay hidden">
-    <div class="modal-box" style="max-width: 700px;">
-        <div class="modal-header">
-            <h3>Riwayat Perubahan Catatan</h3>
-        </div>
-        <div class="modal-body">
-            <div id="riwayat-penilaian-info" class="mb-3"></div>
-            <div class="table-responsive" style="max-height: 320px; overflow-y: auto;">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Waktu</th>
-                            <th>Aksi</th>
-                            <th>Diubah Oleh</th>
-                            <th>Detail Perubahan</th>
-                        </tr>
-                    </thead>
-                    <tbody id="table-riwayat-penilaian">
-                        <tr><td colspan="4" class="text-center text-muted">Memuat riwayat...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" onclick="closeModal('modal-riwayat-penilaian')">Tutup</button>
-        </div>
-    </div>
-</div>
-    
     <!-- Berkas Script JS -->
     <script src="js/supabase-config.js"></script>
     <script src="js/auth.js"></script>
