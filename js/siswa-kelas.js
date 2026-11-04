@@ -96,35 +96,52 @@ function populateDropdownKelas() {
 
 async function openModalKelas(kelasId = null) {
     const modal = document.getElementById('modal-kelas');
+    if (!modal) {
+        console.error("Elemen #modal-kelas tidak ditemukan di HTML.");
+        return;
+    }
+
     const form = document.getElementById('form-kelas');
-    form.reset();
+    if (form) form.reset();
 
-    // Populate Guru & TA
+    // Pastikan array tidak undefined agar tidak crash
+    const guruList = Array.isArray(cacheGuru) ? cacheGuru : [];
+    const taList = Array.isArray(cacheTA) ? cacheTA : [];
+
+    // isi dropdown Wali Kelas
     const selectWali = document.getElementById('kelas-wali');
-    selectWali.innerHTML = `<option value="">-- Pilih Wali Kelas --</option>` + 
-        cacheGuru.map(g => `<option value="${g.id}">${g.profiles?.nama_lengkap || 'Tanpa Nama'}</option>`).join('');
+    if (selectWali) {
+        selectWali.innerHTML = `<option value="">-- Pilih Wali Kelas --</option>` + 
+            guruList.map(g => `<option value="${g.id}">${g.profiles?.nama_lengkap || 'Tanpa Nama'}</option>`).join('');
+    }
 
+    // Isi dropdown Tahun Ajaran
     const selectTA = document.getElementById('kelas-ta');
-    selectTA.innerHTML = `<option value="">-- Pilih Tahun Ajaran --</option>` + 
-        cacheTA.map(t => `<option value="${t.id}">${t.tahun} - ${t.semester}</option>`).join('');
+    if (selectTA) {
+        selectTA.innerHTML = `<option value="">-- Pilih Tahun Ajaran --</option>` + 
+            taList.map(t => `<option value="${t.id}">${t.tahun} - ${t.semester}</option>`).join('');
+    }
 
     if (kelasId) {
-        document.getElementById('modal-kelas-title').innerText = "Edit Kelas";
+        const title = document.getElementById('modal-kelas-title');
+        if (title) title.innerText = "Edit Kelas";
+        
         const k = cacheKelas.find(item => item.id === kelasId);
         if (k) {
             document.getElementById('kelas-id').value = k.id;
             document.getElementById('kelas-nama').value = k.nama_kelas;
-            document.getElementById('kelas-wali').value = k.wali_kelas_id || '';
-            document.getElementById('kelas-ta').value = k.tahun_ajaran_id || '';
+            if (selectWali) selectWali.value = k.wali_kelas_id || '';
+            if (selectTA) selectTA.value = k.tahun_ajaran_id || '';
         }
     } else {
-        document.getElementById('modal-kelas-title').innerText = "Tambah Kelas";
+        const title = document.getElementById('modal-kelas-title');
+        if (title) title.innerText = "Tambah Kelas";
         document.getElementById('kelas-id').value = '';
     }
 
+    // Tampilkan modal
     modal.classList.remove('hidden');
 }
-
 async function saveKelas(e) {
     e.preventDefault();
     const id = document.getElementById('kelas-id').value;
