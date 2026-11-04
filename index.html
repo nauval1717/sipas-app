@@ -7,6 +7,8 @@
     <!-- Supabase JS Client & SheetJS (Excel) CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- Pustaka Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/mobile.css">
 </head>
@@ -120,60 +122,144 @@
             <!-- Halaman Dynamic (Views) -->
             <main class="content-body">
                 
-                <!-- 1. DASHBOARD -->
+                <!-- 1. DASHBOARD UTAMA -->
                 <section id="page-dashboard" class="page-section">
-                    <div class="stats-grid">
+                    <!-- Header & Baris Filter -->
+                    <div class="card mb-4">
+                        <div class="card-body flex-between" style="flex-wrap: wrap; gap: 15px;">
+                            <div>
+                                <h2 style="margin: 0;">Ringkasan Kinerja Sikap Siswa</h2>
+                                <small class="text-muted" id="dash-role-badge">Memuat status peran...</small>
+                            </div>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <select id="dash-filter-ta" class="form-input" onchange="loadDashboardData()" style="width: auto;">
+                                    <option value="">-- Semua Tahun Ajaran --</option>
+                                </select>
+                                <select id="dash-filter-semester" class="form-input" onchange="loadDashboardData()" style="width: auto;">
+                                    <option value="">-- Semua Semester --</option>
+                                    <option value="Ganjil">Ganjil</option>
+                                    <option value="Genap">Genap</option>
+                                </select>
+                                <button class="btn btn-secondary" onclick="loadDashboardData()">🔄 Perbarui</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ringkasan Kartu Statistik (5 Kartu Utama) -->
+                    <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
                         <div class="stat-card">
                             <div class="stat-icon bg-blue">👨‍🎓</div>
                             <div class="stat-info">
                                 <h3>Total Siswa</h3>
-                                <p class="stat-value" id="stat-siswa">-</p>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon bg-green">👍</div>
-                            <div class="stat-info">
-                                <h3>Sikap Positif</h3>
-                                <p class="stat-value text-success" id="stat-positif">-</p>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon bg-red">👎</div>
-                            <div class="stat-info">
-                                <h3>Sikap Negatif</h3>
-                                <p class="stat-value text-danger" id="stat-negatif">-</p>
+                                <p class="stat-value" id="stat-siswa">0</p>
                             </div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-icon bg-orange">🏫</div>
                             <div class="stat-info">
                                 <h3>Total Kelas</h3>
-                                <p class="stat-value" id="stat-kelas">-</p>
+                                <p class="stat-value" id="stat-kelas">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon bg-blue" style="background-color: #e0e7ff; color: #4338ca;">👨‍🏫</div>
+                            <div class="stat-info">
+                                <h3>Total Guru</h3>
+                                <p class="stat-value" id="stat-guru">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon bg-green">👍</div>
+                            <div class="stat-info">
+                                <h3>Sikap Positif</h3>
+                                <p class="stat-value text-success" id="stat-positif">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon bg-red">👎</div>
+                            <div class="stat-info">
+                                <h3>Sikap Negatif</h3>
+                                <p class="stat-value text-danger" id="stat-negatif">0</p>
                             </div>
                         </div>
                     </div>
 
-                    <div class="card mt-4">
-                        <div class="card-header">
-                            <h2>Penilaian Terbaru</h2>
+                    <!-- Layout Grafik & Top Perilaku -->
+                    <div class="form-grid mt-4" style="grid-template-columns: 2fr 1fr;">
+                        <!-- Grafik Perbandingan -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>Grafik Perbandingan Penilaian Sikap</h2>
+                            </div>
+                            <div class="card-body">
+                                <div style="position: relative; height: 280px; width: 100%;">
+                                    <canvas id="chart-penilaian"></canvas>
+                                </div>
+                            </div>
                         </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th>Tanggal</th>
-                                            <th>Siswa</th>
-                                            <th>Kelas</th>
-                                            <th>Jenis</th>
-                                            <th>Perilaku</th>
-                                            <th>Pencatat</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="table-recent-assessments">
-                                        <tr><td colspan="6" class="text-center text-muted">Belum ada data penilaian.</td></tr>
-                                    </tbody>
-                                </table>
+
+                        <!-- Perilaku Paling Sering Dicatat -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>Top Perilaku Dicatat</h2>
+                            </div>
+                            <div class="card-body">
+                                <ul id="list-top-perilaku" style="list-style: none; padding: 0; margin: 0;">
+                                    <li class="text-muted text-center">Memuat data...</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Layout Rekap Kelas & Penilaian Terbaru -->
+                    <div class="form-grid mt-4">
+                        <!-- Rekapitulasi Berdasarkan Kelas -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>Rekapitulasi per Kelas</h2>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Nama Kelas</th>
+                                                <th>Kejadian Positif</th>
+                                                <th>Kejadian Negatif</th>
+                                                <th>Total Kejadian</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="table-rekap-kelas-body">
+                                            <tr><td colspan="4" class="text-center text-muted">Memuat data kelas...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Catatan Penilaian Terbaru -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>Penilaian Terbaru</h2>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Tanggal</th>
+                                                <th>Siswa</th>
+                                                <th>Kelas</th>
+                                                <th>Jenis</th>
+                                                <th>Perilaku</th>
+                                                <th>Pencatat</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="table-recent-assessments">
+                                            <tr><td colspan="6" class="text-center text-muted">Belum ada data penilaian.</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
