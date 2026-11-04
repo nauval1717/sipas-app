@@ -640,6 +640,70 @@
         </div>
     </div>
 
+    <!-- MODAL FORM GURU -->
+    <div id="modal-guru" class="modal-overlay hidden">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="modal-guru-title">Tambah Data Guru</h3>
+            </div>
+            <form id="form-guru" onsubmit="saveGuru(event)">
+                <input type="hidden" id="guru-id">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>NIP</label>
+                        <input type="text" id="guru-nip" class="form-input" placeholder="Contoh: 198501012010011001" required>
+                    </div>
+                    <div class="form-group mt-3">
+                        <label>Nama Lengkap</label>
+                        <input type="text" id="guru-nama" class="form-input" placeholder="Nama beserta gelar" required>
+                    </div>
+                    <div class="form-group mt-3">
+                        <label>No. HP / WhatsApp</label>
+                        <input type="text" id="guru-hp" class="form-input" placeholder="08123456789">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modal-guru')">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan Guru</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL FORM KARAKTER & PERILAKU -->
+    <div id="modal-karakter" class="modal-overlay hidden">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="modal-karakter-title">Tambah Perilaku Sikap</h3>
+            </div>
+            <form id="form-karakter" onsubmit="saveKarakter(event)">
+                <input type="hidden" id="perilaku-id">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Kategori Karakter</label>
+                        <select id="perilaku-kategori" class="form-input" required>
+                            <option value="">-- Pilih Kategori --</option>
+                        </select>
+                    </div>
+                    <div class="form-group mt-3">
+                        <label>Nama Perilaku</label>
+                        <input type="text" id="perilaku-nama" class="form-input" placeholder="Contoh: Datang Tepat Waktu" required>
+                    </div>
+                    <div class="form-group mt-3">
+                        <label>Jenis Perilaku</label>
+                        <select id="perilaku-jenis" class="form-input" required>
+                            <option value="positif">Positif (Apresiasi)</option>
+                            <option value="negatif">Negatif (Pelanggaran)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modal-karakter')">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan Perilaku</button>
+                </div>
+            </form>
+        </div>
+    </div>
     <!-- Berkas Script JS -->
     <script src="js/supabase-config.js"></script>
     <script src="js/auth.js"></script>
