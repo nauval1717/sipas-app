@@ -92,6 +92,7 @@ function openModalGuru(guruId = null) {
     modal.classList.remove('hidden');
 }
 
+// --- SAVING GURU DENGAN CEK DUPLIKASI NIP ---
 async function saveGuru(e) {
     e.preventDefault();
     if (!window.db) return;
@@ -102,8 +103,21 @@ async function saveGuru(e) {
     const no_hp = document.getElementById('guru-hp').value.trim();
 
     try {
+        // Cek Duplikasi NIP
+        if (!id && nip) {
+            const { data: existNip } = await window.db
+                .from('guru')
+                .select('id')
+                .eq('nip', nip)
+                .maybeSingle();
+
+            if (existNip) {
+                if (window.showToast) showToast(`Gagal: NIP '${nip}' sudah terdaftar!`, "error");
+                return;
+            }
+        }
+
         if (id) {
-            // Update data guru & profil yang sudah ada
             const g = cacheGuru.find(item => item.id === id);
             if (g && g.profile_id) {
                 await window.db.from('profiles').update({ nama_lengkap: nama }).eq('id', g.profile_id);
@@ -112,7 +126,6 @@ async function saveGuru(e) {
             if (error) throw error;
             if (window.showToast) showToast("Data guru diperbarui.", "success");
         } else {
-            // Hasilkan ID UUID baru secara manual untuk profiles
             const newProfileId = crypto.randomUUID();
 
             const { error: errProf } = await window.db.from('profiles').insert([{
@@ -540,6 +553,7 @@ function openModalSiswa(siswaId = null) {
     modal.classList.remove('hidden');
 }
 
+// --- SAVING SISWA DENGAN CEK DUPLIKASI NIS ---
 async function saveSiswa(e) {
     e.preventDefault();
     if (!window.db) return;
@@ -552,13 +566,27 @@ async function saveSiswa(e) {
     const kelas_id_aktif = document.getElementById('siswa-kelas').value || null;
 
     try {
+        // Cek Duplikasi NIS pada pendaftaran baru
+        if (!id && nis) {
+            const { data: existNis } = await window.db
+                .from('siswa')
+                .select('id')
+                .eq('nis', nis)
+                .maybeSingle();
+
+            if (existNis) {
+                if (window.showToast) showToast(`Gagal: NIS '${nis}' sudah terdaftar di sistem!`, "error");
+                return;
+            }
+        }
+
         if (id) {
             const { error } = await window.db.from('siswa').update({
                 nis, nisn, nama_lengkap, jenis_kelamin, kelas_id_aktif
             }).eq('id', id);
 
             if (error) throw error;
-            if (window.showToast) showToast("Data siswa diperbarui.", "success");
+            if (window.showToast) showToast("Data siswa berhasil diperbarui.", "success");
         } else {
             const { data: newSiswa, error } = await window.db.from('siswa').insert([{
                 nis, nisn, nama_lengkap, jenis_kelamin, kelas_id_aktif
@@ -893,13 +921,24 @@ function downloadTemplateGuru() {
     XLSX.writeFile(wb, "Template_Data_Guru.xlsx");
 }
 
-// --- HAPUS GURU ---
+// --- HAPUS GURU DAN PROFIL TERIKAT ---
 async function deleteGuru(guruId, nama) {
     if (!confirm(`Apakah Anda yakin ingin menghapus data guru ${nama}?`)) return;
+
     try {
-        const { error } = await window.db.from('guru').delete().eq('id', guruId);
-        if (error) throw error;
-        if (window.showToast) showToast("Data guru berhasil dihapus.", "success");
+        const g = cacheGuru.find(item => item.id === guruId);
+        const profileId = g ? g.profile_id : null;
+
+        // 1. Hapus dari tabel guru
+        const { error: errGuru } = await window.db.from('guru').delete().eq('id', guruId);
+        if (errGuru) throw errGuru;
+
+        // 2. Bersihkan profil terikat di tabel profiles jika ada
+        if (profileId) {
+            await window.db.from('profiles').delete().eq('id', profileId);
+        }
+
+        if (window.showToast) showToast("Data guru berhasil dihapus bersih.", "success");
         await loadGuru();
     } catch (err) {
         if (window.showToast) showToast("Gagal menghapus guru: " + err.message, "error");
