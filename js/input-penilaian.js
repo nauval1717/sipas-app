@@ -162,11 +162,12 @@ async function savePenilaian(event) {
             tanggal,
             siswa_id,
             kelas_id,
-            tahun_ajaran_id, // <-- Sertakan variabel ini
+            tahun_ajaran_id,
             perilaku_id,
             jenis_sikap,
             catatan: catatan || null,
-            pencatat_id
+            pencatat_id: pencatat_id,
+            guru_id: pencatat_id // Pengaman jika tabel memiliki kolom guru_id
         }]);
 
         if (error) throw error;
