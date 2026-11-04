@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function initDataMaster() {
-    if (!window.db) return;
+    if (!.db) return;
     await Promise.all([
         loadTahunAjaran(),
         loadGuruList(),
@@ -569,11 +569,23 @@ async function loadTahunAjaran() {
     cacheTA = data || [];
 }
 
-// Eksplisitkan Seluruh Fungsi Modal ke Scope Window
+// --- HANDLER SEMENTARA UNTUK GURU & KARAKTER ---
+function openModalGuru() {
+    alert("Formulir Tambah Guru siap dihubungkan pada tahap berikutnya.");
+}
+
+function openModalKarakter() {
+    alert("Formulir Tambah Perilaku/Karakter siap dihubungkan pada tahap berikutnya.");
+}
+
+// --- EKSPLISITKAN SELURUH FUNGSI MODAL DATA MASTER KE WINDOW ---
+window.openModalSiswa = openModalSiswa;
+window.openModalGuru = openModalGuru;
 window.openModalKelas = openModalKelas;
+window.openModalKarakter = openModalKarakter;
+
 window.saveKelas = saveKelas;
 window.deleteKelas = deleteKelas;
-window.openModalSiswa = openModalSiswa;
 window.saveSiswa = saveSiswa;
 window.filterSiswa = filterSiswa;
 window.viewDetailSiswa = viewDetailSiswa;
