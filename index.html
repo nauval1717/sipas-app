@@ -538,27 +538,87 @@
                     </div>
                 </section>
 
-                <!-- 9. LAPORAN -->
+                <!-- 9. LAPORAN & EKSPOR EXCEL -->
                 <section id="page-laporan" class="page-section hidden">
                     <div class="card">
-                        <div class="card-header">
-                            <h2>Pusat Laporan & Ekspor Excel</h2>
+                        <div class="card-header flex-between">
+                            <h2>Pusat Laporan & Ekspor Excel SIPAS</h2>
+                            <button type="button" class="btn btn-success" id="btn-export-excel" onclick="generateLaporanExcel()">
+                                📊 Unduh Laporan Excel Multi-Sheet (.xlsx)
+                            </button>
                         </div>
                         <div class="card-body">
+                            <p class="text-muted mb-4">Pilih kriteria filter untuk menyesuaikan cakupan laporan yang ingin diunduh.</p>
+                            
                             <div class="form-grid">
+                                <!-- 1. LINGKUP LAPORAN -->
                                 <div class="form-group">
-                                    <label>Filter Kelas</label>
-                                    <select class="form-input"><option value="">Semua Kelas</option></select>
-                                </div>
-                                <div class="form-group">
-                                    <label>Filter Semester</label>
-                                    <select class="form-input">
-                                        <option value="">Ganjil</option>
-                                        <option value="">Genap</option>
+                                    <label for="laporan-scope">Lingkup Laporan</label>
+                                    <select id="laporan-scope" class="form-input" onchange="onLaporanScopeChange()">
+                                        <option value="sekolah">🏫 Seluruh Sekolah</option>
+                                        <option value="kelas">🏫 Per Kelas tertentu</option>
+                                        <option value="siswa">👨‍🎓 Per Siswa tertentu</option>
                                     </select>
                                 </div>
+
+                                <!-- 2. FILTER KELAS -->
+                                <div class="form-group">
+                                    <label for="laporan-filter-kelas">Pilih Kelas</label>
+                                    <select id="laporan-filter-kelas" class="form-input" onchange="onLaporanKelasChange()" disabled>
+                                        <option value="">-- Pilih Kelas --</option>
+                                    </select>
+                                </div>
+
+                                <!-- 3. FILTER SISWA -->
+                                <div class="form-group">
+                                    <label for="laporan-filter-siswa">Pilih Siswa</label>
+                                    <select id="laporan-filter-siswa" class="form-input" disabled>
+                                        <option value="">-- Pilih Siswa --</option>
+                                    </select>
+                                </div>
+
+                                <!-- 4. FILTER TAHUN AJARAN -->
+                                <div class="form-group">
+                                    <label for="laporan-filter-ta">Tahun Ajaran</label>
+                                    <select id="laporan-filter-ta" class="form-input">
+                                        <option value="">-- Semua Tahun Ajaran --</option>
+                                    </select>
+                                </div>
+
+                                <!-- 5. FILTER SEMESTER -->
+                                <div class="form-group">
+                                    <label for="laporan-filter-semester">Semester</label>
+                                    <select id="laporan-filter-semester" class="form-input">
+                                        <option value="">-- Semua Semester --</option>
+                                        <option value="Ganjil">Ganjil</option>
+                                        <option value="Genap">Genap</option>
+                                    </select>
+                                </div>
+
+                                <!-- 6. RENTANG TANGGAL -->
+                                <div class="form-group">
+                                    <label for="laporan-date-start">Dari Tanggal</label>
+                                    <input type="date" id="laporan-date-start" class="form-input">
+                                </div>
+                                <div class="form-group">
+                                    <label for="laporan-date-end">Sampai Tanggal</label>
+                                    <input type="date" id="laporan-date-end" class="form-input">
+                                </div>
                             </div>
-                            <button class="btn btn-success mt-3">📊 Unduh Laporan Excel (Multi-Sheet)</button>
+
+                            <!-- RINGKASAN PRATINJAU SEMENTARA -->
+                            <div class="card mt-4" style="background-color: #f8fafc; border: 1px dashed #cbd5e1;">
+                                <div class="card-body">
+                                    <h4 style="margin-bottom: 8px;">ℹ️ Informasi Laporan yang Akan Digenerate</h4>
+                                    <ul style="margin-left: 20px; font-size: 14px; color: #475569;">
+                                        <li><strong>Sheet 1 - RINGKASAN:</strong> Profil Sekolah, Tahun Ajaran, Semester, dan Total Statistik.</li>
+                                        <li><strong>Sheet 2 - REKAP SISWA:</strong> Rekap akumulasi kejadian Positif & Negatif per siswa.</li>
+                                        <li><strong>Sheet 3 - RINCIAN PENILAIAN:</strong> Log detail setiap kejadian catatan sikap siswa.</li>
+                                        <li><strong>Sheet 4 - REKAP KARAKTER:</strong> Frekuensi kemunculan indikator perilaku sikap.</li>
+                                        <li><strong>Format Cetak:</strong> Siap cetak pada ukuran kertas A4 (Skala otomatis disesuaikan).</li>
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>
