@@ -308,44 +308,104 @@
                     </div>
                 </section>
 
-                <!-- 6. INPUT PENILAIAN -->
+                <!-- 6. INPUT PENILAIAN SISWA -->
                 <section id="page-input-penilaian" class="page-section hidden">
                     <div class="card">
-                        <div class="card-header">
-                            <h2>Formulir Input Penilaian Sikap</h2>
+                        <div class="card-header flex-between">
+                            <h2>Input Penilaian Sikap Siswa</h2>
+                            <button type="button" class="btn btn-secondary" onclick="resetFormPenilaian()">🔄 Reset Form</button>
                         </div>
                         <div class="card-body">
-                            <form id="form-penilaian" onsubmit="event.preventDefault();">
+                            <form id="form-penilaian" onsubmit="savePenilaian(event)">
                                 <div class="form-grid">
+                                    <!-- 1. TANGGAL KEJADIAN -->
                                     <div class="form-group">
-                                        <label>Tanggal</label>
-                                        <input type="date" class="form-input" id="input-tanggal" required>
+                                        <label for="input-tanggal">Tanggal Kejadian <span class="text-danger">*</span></label>
+                                        <input type="date" id="input-tanggal" class="form-input" required>
                                     </div>
+
+                                    <!-- 2. PILIH KELAS -->
                                     <div class="form-group">
-                                        <label>Kelas</label>
-                                        <select class="form-input" id="select-kelas">
+                                        <label for="select-kelas">Pilih Kelas <span class="text-danger">*</span></label>
+                                        <select id="select-kelas" class="form-input" onchange="onPenilaianKelasChange()" required>
                                             <option value="">-- Pilih Kelas --</option>
                                         </select>
                                     </div>
+
+                                    <!-- 3. PILIH SISWA -->
                                     <div class="form-group">
-                                        <label>Siswa</label>
-                                        <select class="form-input" id="select-siswa">
-                                            <option value="">-- Pilih Siswa --</option>
+                                        <label for="select-siswa">Pilih Siswa <span class="text-danger">*</span></label>
+                                        <select id="select-siswa" class="form-input" disabled required>
+                                            <option value="">-- Pilih Kelas Terlebih Dahulu --</option>
                                         </select>
                                     </div>
+
+                                    <!-- 4. JENIS PENILAIAN -->
                                     <div class="form-group">
-                                        <label>Perilaku</label>
-                                        <select class="form-input" id="select-perilaku">
+                                        <label for="select-jenis">Jenis Penilaian <span class="text-danger">*</span></label>
+                                        <select id="select-jenis" class="form-input" onchange="updatePerilakuDropdown()" required>
+                                            <option value="positif">👍 POSITIF (Apresiasi / Perilaku Baik)</option>
+                                            <option value="negatif">👎 NEGATIF (Pelanggaran / Teguran)</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- 5. KATEGORI KARAKTER -->
+                                    <div class="form-group">
+                                        <label for="select-kategori">Filter Kategori Karakter</label>
+                                        <select id="select-kategori" class="form-input" onchange="updatePerilakuDropdown()">
+                                            <option value="">-- Semua Kategori --</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- 6. PERILAKU SIKAP -->
+                                    <div class="form-group">
+                                        <label for="select-perilaku">Pilih Perilaku Sikap <span class="text-danger">*</span></label>
+                                        <select id="select-perilaku" class="form-input" required>
                                             <option value="">-- Pilih Perilaku --</option>
                                         </select>
                                     </div>
                                 </div>
+
+                                <!-- 7. KETERANGAN / CATATAN KEJADIAN -->
                                 <div class="form-group mt-3">
-                                    <label>Catatan Kejadian</label>
-                                    <textarea class="form-input" rows="3" placeholder="Tuliskan deskripsi singkat kejadian di lapangan..."></textarea>
+                                    <label for="input-catatan">Keterangan / Catatan Kejadian (Opsional)</label>
+                                    <textarea id="input-catatan" class="form-input" rows="3" placeholder="Contoh: Membantu merapikan meja guru saat jam istirahat atau terlambat masuk kelas 15 menit..."></textarea>
                                 </div>
-                                <button type="button" class="btn btn-primary mt-3">Simpan Penilaian</button>
+
+                                <!-- 8. TOMBOL SIMPAN -->
+                                <div class="form-actions mt-4 flex-between">
+                                    <button type="button" class="btn btn-secondary" onclick="resetFormPenilaian()">Batal / Reset</button>
+                                    <button type="submit" id="btn-simpan-penilaian" class="btn btn-primary" style="min-width: 180px;">
+                                        <span>💾 Simpan Penilaian</span>
+                                    </button>
+                                </div>
                             </form>
+                        </div>
+                    </div>
+
+                    <!-- TABEL CATATAN TERBARU & AKSES EDIT -->
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h2>Penilaian Terbaru Dicatat</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Tanggal</th>
+                                            <th>Siswa</th>
+                                            <th>Kelas</th>
+                                            <th>Jenis</th>
+                                            <th>Perilaku & Catatan</th>
+                                            <th>Pencatat & Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="table-recent-assessments">
+                                        <tr><td colspan="6" class="text-center text-muted">Memuat catatan...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -738,6 +798,70 @@
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-secondary" onclick="closeModal('modal-import-guru')">Batal</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL EDIT CATATAN PENILAIAN -->
+<div id="modal-edit-penilaian" class="modal-overlay hidden">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3>Edit Catatan Penilaian</h3>
+        </div>
+        <form id="form-edit-penilaian" onsubmit="saveEditPenilaian(event)">
+            <input type="hidden" id="edit-penilaian-id">
+            <div class="modal-body">
+                <div id="edit-penilaian-info" class="mb-3"></div>
+
+                <div class="form-group">
+                    <label for="edit-penilaian-tanggal">Tanggal Kejadian <span class="text-danger">*</span></label>
+                    <input type="date" id="edit-penilaian-tanggal" class="form-input" required>
+                </div>
+                <div class="form-group mt-3">
+                    <label for="edit-penilaian-perilaku">Perilaku Sikap <span class="text-danger">*</span></label>
+                    <select id="edit-penilaian-perilaku" class="form-input" required>
+                        <option value="">-- Pilih Perilaku --</option>
+                    </select>
+                </div>
+                <div class="form-group mt-3">
+                    <label for="edit-penilaian-catatan">Keterangan / Catatan Kejadian</label>
+                    <textarea id="edit-penilaian-catatan" class="form-input" rows="4" placeholder="Tuliskan deskripsi singkat kejadian..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('modal-edit-penilaian')">Batal</button>
+                <button type="submit" id="btn-simpan-edit-penilaian" class="btn btn-primary">Simpan Perubahan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL RIWAYAT PERUBAHAN PENILAIAN -->
+<div id="modal-riwayat-penilaian" class="modal-overlay hidden">
+    <div class="modal-box" style="max-width: 700px;">
+        <div class="modal-header">
+            <h3>Riwayat Perubahan Catatan</h3>
+        </div>
+        <div class="modal-body">
+            <div id="riwayat-penilaian-info" class="mb-3"></div>
+            <div class="table-responsive" style="max-height: 320px; overflow-y: auto;">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Waktu</th>
+                            <th>Aksi</th>
+                            <th>Diubah Oleh</th>
+                            <th>Detail Perubahan</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-riwayat-penilaian">
+                        <tr><td colspan="4" class="text-center text-muted">Memuat riwayat...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('modal-riwayat-penilaian')">Tutup</button>
         </div>
     </div>
 </div>
