@@ -370,18 +370,53 @@ async function saveKelas(e) {
     const id = document.getElementById('kelas-id').value;
     const nama_kelas = document.getElementById('kelas-nama').value.trim();
     const wali_kelas_id = document.getElementById('kelas-wali').value || null;
-    const tahun_ajaran_id = document.getElementById('kelas-ta').value;
+    const taInput = document.getElementById('kelas-ta').value.trim();
 
     try {
+        let tahun_ajaran_id = null;
+
+        if (taInput) {
+            // 1. Cek apakah teks Tahun Ajaran sudah ada di tabel tahun_ajaran
+            let { data: taExist } = await window.db
+                .from('tahun_ajaran')
+                .select('id')
+                .eq('tahun', taInput)
+                .maybeSingle();
+
+            if (taExist) {
+                tahun_ajaran_id = taExist.id;
+            } else {
+                // 2. Jika belum ada, buat otomatis untuk mengambil ID UUID-nya
+                const { data: taNew, error: errTa } = await window.db
+                    .from('tahun_ajaran')
+                    .insert([{ tahun: taInput, semester: 'Ganjil', is_aktif: true }])
+                    .select('id')
+                    .single();
+
+                if (errTa) throw errTa;
+                tahun_ajaran_id = taNew.id;
+            }
+        }
+
+        // 3. Simpan data kelas menggunakan tahun_ajaran_id (UUID) yang valid
         if (id) {
-            const { error } = await window.db.from('kelas').update({ nama_kelas, wali_kelas_id, tahun_ajaran_id }).eq('id', id);
+            const { error } = await window.db.from('kelas').update({ 
+                nama_kelas, 
+                wali_kelas_id, 
+                tahun_ajaran_id 
+            }).eq('id', id);
             if (error) throw error;
             if (window.showToast) showToast("Kelas berhasil diperbarui.", "success");
         } else {
-            const { error } = await window.db.from('kelas').insert([{ nama_kelas, wali_kelas_id, tahun_ajaran_id }]);
+            const { error } = await window.db.from('kelas').insert([{ 
+                nama_kelas, 
+                wali_kelas_id, 
+                tahun_ajaran_id 
+            }]);
             if (error) throw error;
             if (window.showToast) showToast("Kelas berhasil ditambahkan.", "success");
         }
+
         closeModal('modal-kelas');
         await loadKelas();
     } catch (err) {
