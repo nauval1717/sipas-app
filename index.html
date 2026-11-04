@@ -410,26 +410,62 @@
                     </div>
                 </section>
 
-                <!-- 7. SKOR SISWA -->
+                <!-- 7. HALAMAN SKOR SISWA -->
                 <section id="page-skor-siswa" class="page-section hidden">
                     <div class="card">
                         <div class="card-header">
-                            <h2>Rekapitulasi Total Kejadian Positif & Negatif</h2>
+                            <h2>Rekapitulasi Total Kejadian Positif & Negatif Siswa</h2>
                         </div>
                         <div class="card-body">
+                            <!-- Filter Bar -->
+                            <div class="form-grid mb-3">
+                                <div class="form-group">
+                                    <label>Cari Siswa</label>
+                                    <input type="text" id="skor-search" class="form-input" placeholder="Cari Nama / NIS..." oninput="filterSkorSiswa()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Kelas</label>
+                                    <select id="skor-filter-kelas" class="form-input" onchange="filterSkorSiswa()">
+                                        <option value="">-- Semua Kelas --</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Tahun Ajaran</label>
+                                    <select id="skor-filter-ta" class="form-input" onchange="filterSkorSiswa()">
+                                        <option value="">-- Semua Tahun Ajaran --</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Semester</label>
+                                    <select id="skor-filter-semester" class="form-input" onchange="filterSkorSiswa()">
+                                        <option value="">-- Semua Semester --</option>
+                                        <option value="Ganjil">Ganjil</option>
+                                        <option value="Genap">Genap</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Dari Tanggal</label>
+                                    <input type="date" id="skor-date-start" class="form-input" onchange="filterSkorSiswa()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Sampai Tanggal</label>
+                                    <input type="date" id="skor-date-end" class="form-input" onchange="filterSkorSiswa()">
+                                </div>
+                            </div>
+
                             <div class="table-responsive">
                                 <table class="table">
                                     <thead>
                                         <tr>
-                                            <th>Nama Siswa</th>
+                                            <th>NIS / Nama Siswa</th>
                                             <th>Kelas</th>
                                             <th>Kejadian Positif</th>
                                             <th>Kejadian Negatif</th>
                                             <th>Aksi</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="table-skor">
-                                        <tr><td colspan="5" class="text-center text-muted">Rekapitulasi skor siswa akan ditampilkan di sini.</td></tr>
+                                    <tbody id="table-skor-body">
+                                        <tr><td colspan="5" class="text-center text-muted">Memuat rekapitulasi skor...</td></tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -437,13 +473,49 @@
                     </div>
                 </section>
 
-                <!-- 8. PELANGGARAN SISWA -->
+                <!-- 8. HALAMAN PELANGGARAN SISWA -->
                 <section id="page-pelanggaran" class="page-section hidden">
                     <div class="card">
                         <div class="card-header">
                             <h2>Daftar Catatan Pelanggaran Siswa</h2>
                         </div>
                         <div class="card-body">
+                            <!-- Filter Bar -->
+                            <div class="form-grid mb-3">
+                                <div class="form-group">
+                                    <label>Cari Siswa</label>
+                                    <input type="text" id="pelanggaran-search" class="form-input" placeholder="Cari Nama / NIS..." oninput="filterPelanggaran()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Kelas</label>
+                                    <select id="pelanggaran-filter-kelas" class="form-input" onchange="filterPelanggaran()">
+                                        <option value="">-- Semua Kelas --</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Tahun Ajaran</label>
+                                    <select id="pelanggaran-filter-ta" class="form-input" onchange="filterPelanggaran()">
+                                        <option value="">-- Semua Tahun Ajaran --</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Semester</label>
+                                    <select id="pelanggaran-filter-semester" class="form-input" onchange="filterPelanggaran()">
+                                        <option value="">-- Semua Semester --</option>
+                                        <option value="Ganjil">Ganjil</option>
+                                        <option value="Genap">Genap</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Dari Tanggal</label>
+                                    <input type="date" id="pelanggaran-date-start" class="form-input" onchange="filterPelanggaran()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Sampai Tanggal</label>
+                                    <input type="date" id="pelanggaran-date-end" class="form-input" onchange="filterPelanggaran()">
+                                </div>
+                            </div>
+
                             <div class="table-responsive">
                                 <table class="table">
                                     <thead>
@@ -451,12 +523,14 @@
                                             <th>Tanggal</th>
                                             <th>Nama Siswa</th>
                                             <th>Kelas</th>
-                                            <th>Bentuk Pelanggaran</th>
+                                            <th>Kategori Karakter</th>
+                                            <th>Jenis Pelanggaran</th>
                                             <th>Pencatat</th>
+                                            <th>Keterangan</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="table-pelanggaran">
-                                        <tr><td colspan="5" class="text-center text-muted">Daftar pelanggaran akan ditampilkan di sini.</td></tr>
+                                    <tbody id="table-pelanggaran-body">
+                                        <tr><td colspan="7" class="text-center text-muted">Memuat daftar pelanggaran...</td></tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -850,6 +924,53 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" onclick="closeModal('modal-history-penilaian')">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DETAIL RINCIAN SKOR SISWA -->
+    <div id="modal-detail-skor" class="modal-overlay hidden">
+        <div class="modal-box" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3 id="modal-detail-skor-title">Rincian Perilaku Siswa</h3>
+            </div>
+            <div class="modal-body">
+                <div id="detail-skor-info" class="mb-3"></div>
+                <div class="form-grid">
+                    <div>
+                        <h4 class="text-success mb-2">👍 Rincian Perilaku Positif (<span id="count-detail-positif">0</span>)</h4>
+                        <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Tanggal</th>
+                                        <th>Perilaku</th>
+                                        <th>Catatan</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-detail-positif"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-danger mb-2">👎 Rincian Perilaku Negatif (<span id="count-detail-negatif">0</span>)</h4>
+                        <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Tanggal</th>
+                                        <th>Perilaku</th>
+                                        <th>Catatan</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-detail-negatif"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('modal-detail-skor')">Tutup</button>
             </div>
         </div>
     </div>
