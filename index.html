@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIPAS - Sistem Informasi Penilaian Sikap Siswa</title>
-    <!-- Supabase JS Client via CDN -->
+    <!-- Supabase JS Client & SheetJS (Excel) CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="css/style.css">
@@ -20,18 +20,19 @@
                 <h2>Sistem Penilaian Sikap Siswa</h2>
                 <p>Silakan masuk dengan akun Anda</p>
             </div>
-            <!-- Sisipkan di dalam div.login-card tepat di atas tag <form> -->
+            
             <div id="login-alert" class="alert alert-danger hidden"></div>
+            
             <form id="login-form" onsubmit="handleLogin(event)">
                 <div class="form-group">
                     <label for="email">Email</label>
                     <input type="email" id="email" class="form-input" placeholder="nama@sekolah.sch.id" required>
                 </div>
-                <div class="form-group">
+                <div class="form-group mt-3">
                     <label for="password">Kata Sandi</label>
                     <input type="password" id="password" class="form-input" placeholder="••••••••" required>
                 </div>
-                <button type="submit" class="btn btn-primary btn-block">Masuk ke Aplikasi</button>
+                <button type="submit" class="btn btn-primary btn-block mt-4">Masuk ke Aplikasi</button>
             </form>
         </div>
     </div>
@@ -53,44 +54,45 @@
             </div>
 
             <nav class="sidebar-menu">
-    <div class="menu-label">UTAMA</div>
-    <a href="#" class="menu-item active" onclick="switchPage('dashboard', event)">
-        <span class="icon">📊</span> Dashboard
-    </a>
-    <a href="#" class="menu-item" onclick="switchPage('input-penilaian', event)">
-        <span class="icon">✏️</span> Input Penilaian
-    </a>
+                <div class="menu-label">UTAMA</div>
+                <a href="#" class="menu-item active" onclick="switchPage('dashboard', event)">
+                    <span class="icon">📊</span> Dashboard
+                </a>
+                <a href="#" class="menu-item" onclick="switchPage('input-penilaian', event)">
+                    <span class="icon">✏️</span> Input Penilaian
+                </a>
 
-    <div class="menu-label" data-role="admin">DATA MASTER</div>
-    <a href="#" class="menu-item" data-role="admin" onclick="switchPage('siswa', event)">
-        <span class="icon">👨‍🎓</span> Data Siswa
-    </a>
-    <a href="#" class="menu-item" data-role="admin" onclick="switchPage('guru', event)">
-        <span class="icon">👨‍🏫</span> Data Guru
-    </a>
-    <a href="#" class="menu-item" data-role="admin" onclick="switchPage('kelas', event)">
-        <span class="icon">🏫</span> Data Kelas
-    </a>
-    <a href="#" class="menu-item" data-role="admin" onclick="switchPage('karakter', event)">
-        <span class="icon">⭐</span> Data Karakter
-    </a>
+                <div class="menu-label" data-role="admin">DATA MASTER</div>
+                <a href="#" class="menu-item" data-role="admin" onclick="switchPage('siswa', event)">
+                    <span class="icon">👨‍🎓</span> Data Siswa
+                </a>
+                <a href="#" class="menu-item" data-role="admin" onclick="switchPage('guru', event)">
+                    <span class="icon">👨‍🏫</span> Data Guru
+                </a>
+                <a href="#" class="menu-item" data-role="admin" onclick="switchPage('kelas', event)">
+                    <span class="icon">🏫</span> Data Kelas
+                </a>
+                <a href="#" class="menu-item" data-role="admin" onclick="switchPage('karakter', event)">
+                    <span class="icon">⭐</span> Data Karakter
+                </a>
 
-    <div class="menu-label">REKAP & LAPORAN</div>
-    <a href="#" class="menu-item" onclick="switchPage('skor-siswa', event)">
-        <span class="icon">📈</span> Skor & Rekap Siswa
-    </a>
-    <a href="#" class="menu-item" onclick="switchPage('pelanggaran', event)">
-        <span class="icon">⚠️</span> Pelanggaran Siswa
-    </a>
-    <a href="#" class="menu-item" onclick="switchPage('laporan', event)">
-        <span class="icon">📄</span> Laporan & Ekspor
-    </a>
+                <div class="menu-label">REKAP & LAPORAN</div>
+                <a href="#" class="menu-item" onclick="switchPage('skor-siswa', event)">
+                    <span class="icon">📈</span> Skor & Rekap Siswa
+                </a>
+                <a href="#" class="menu-item" onclick="switchPage('pelanggaran', event)">
+                    <span class="icon">⚠️</span> Pelanggaran Siswa
+                </a>
+                <a href="#" class="menu-item" onclick="switchPage('laporan', event)">
+                    <span class="icon">📄</span> Laporan & Ekspor
+                </a>
 
-    <div class="menu-label" data-role="admin">SISTEM</div>
-    <a href="#" class="menu-item" data-role="admin" onclick="switchPage('pengaturan', event)">
-        <span class="icon">⚙️</span> Pengaturan
-    </a>
-</nav>
+                <div class="menu-label" data-role="admin">SISTEM</div>
+                <a href="#" class="menu-item" data-role="admin" onclick="switchPage('pengaturan', event)">
+                    <span class="icon">⚙️</span> Pengaturan
+                </a>
+            </nav>
+
             <div class="sidebar-footer">
                 <button class="btn btn-logout" onclick="handleLogout()">
                     <span class="icon">🚪</span> Keluar
@@ -182,22 +184,36 @@
                     <div class="card">
                         <div class="card-header flex-between">
                             <h2>Kelola Data Siswa</h2>
-                            <button class="btn btn-primary" onclick="openModalSiswa()">+ Tambah Siswa</button>
+                            <div class="action-buttons">
+                                <button class="btn btn-success" onclick="openModalImportSiswa()">📥 Impor Excel</button>
+                                <button class="btn btn-primary" onclick="openModalSiswa()">+ Tambah Siswa</button>
+                            </div>
                         </div>
                         <div class="card-body">
+                            <div class="form-grid mt-2 mb-3">
+                                <div class="form-group">
+                                    <input type="text" id="search-siswa" class="form-input" placeholder="Cari Nama atau NIS/NISN..." oninput="filterSiswa()">
+                                </div>
+                                <div class="form-group">
+                                    <select id="filter-kelas-siswa" class="form-input" onchange="filterSiswa()">
+                                        <option value="">-- Semua Kelas --</option>
+                                    </select>
+                                </div>
+                            </div>
+
                             <div class="table-responsive">
                                 <table class="table">
                                     <thead>
                                         <tr>
-                                            <th>NISN</th>
+                                            <th>NIS / NISN</th>
                                             <th>Nama Lengkap</th>
                                             <th>L/P</th>
-                                            <th>Kelas</th>
+                                            <th>Kelas Aktif</th>
                                             <th>Aksi</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="table-siswa">
-                                        <tr><td colspan="5" class="text-center text-muted">Data siswa akan ditampilkan di sini.</td></tr>
+                                    <tbody id="table-siswa-body">
+                                        <tr><td colspan="5" class="text-center text-muted">Memuat data...</td></tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -248,11 +264,12 @@
                                             <th>Nama Kelas</th>
                                             <th>Wali Kelas</th>
                                             <th>Tahun Ajaran</th>
+                                            <th>Jumlah Siswa</th>
                                             <th>Aksi</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="table-kelas">
-                                        <tr><td colspan="4" class="text-center text-muted">Data kelas akan ditampilkan di sini.</td></tr>
+                                    <tbody id="table-kelas-body">
+                                        <tr><td colspan="5" class="text-center text-muted">Memuat data...</td></tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -266,7 +283,6 @@
                         <div class="card-header flex-between">
                             <h2>Kategori & Master Perilaku</h2>
                             <button class="btn btn-primary" onclick="openModalKarakter()">+ Tambah Perilaku</button>
-                        </div>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
@@ -438,7 +454,7 @@
     <!-- Container Toast Notifikasi -->
     <div id="toast-container" class="toast-container"></div>
 
-    <!-- Modal Konfirmasi Keluar -->
+    <!-- MODAL LOGOUT -->
     <div id="logout-modal" class="modal-overlay hidden">
         <div class="modal-box">
             <div class="modal-header">
@@ -454,246 +470,176 @@
         </div>
     </div>
 
-    <!-- PERBARUAN SEKSI KELAS -->
-<section id="page-kelas" class="page-section hidden">
-    <div class="card">
-        <div class="card-header flex-between">
-            <h2>Kelola Data Kelas</h2>
-            <button class="btn btn-primary" onclick="openModalKelas()">+ Tambah Kelas</button>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Nama Kelas</th>
-                            <th>Wali Kelas</th>
-                            <th>Tahun Ajaran</th>
-                            <th>Jumlah Siswa</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="table-kelas-body">
-                        <tr><td colspan="5" class="text-center text-muted">Memuat data...</td></tr>
-                    </tbody>
-                </table>
+    <!-- MODAL FORM KELAS -->
+    <div id="modal-kelas" class="modal-overlay hidden">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="modal-kelas-title">Tambah Kelas</h3>
             </div>
+            <form id="form-kelas" onsubmit="saveKelas(event)">
+                <input type="hidden" id="kelas-id">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Nama Kelas</label>
+                        <input type="text" id="kelas-nama" class="form-input" placeholder="Contoh: VII A" required>
+                    </div>
+                    <div class="form-group mt-3">
+                        <label>Wali Kelas</label>
+                        <select id="kelas-wali" class="form-input">
+                            <option value="">-- Pilih Wali Kelas --</option>
+                        </select>
+                    </div>
+                    <div class="form-group mt-3">
+                        <label>Tahun Ajaran</label>
+                        <select id="kelas-ta" class="form-input" required>
+                            <option value="">-- Pilih Tahun Ajaran --</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modal-kelas')">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan Kelas</button>
+                </div>
+            </form>
         </div>
     </div>
-</section>
 
-<!-- PERBARUAN SEKSI SISWA -->
-<section id="page-siswa" class="page-section hidden">
-    <div class="card">
-        <div class="card-header flex-between">
-            <h2>Kelola Data Siswa</h2>
-            <div class="action-buttons">
-                <button class="btn btn-success" onclick="openModalImportSiswa()">📥 Impor Excel</button>
-                <button class="btn btn-primary" onclick="openModalSiswa()">+ Tambah Siswa</button>
+    <!-- MODAL FORM SISWA -->
+    <div id="modal-siswa" class="modal-overlay hidden">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="modal-siswa-title">Tambah Siswa</h3>
             </div>
-        </div>
-        <div class="card-body">
-            <!-- Filter & Pencarian -->
-            <div class="form-grid mt-2 mb-3">
-                <div class="form-group">
-                    <input type="text" id="search-siswa" class="form-input" placeholder="Cari Nama atau NIS/NISN..." oninput="filterSiswa()">
+            <form id="form-siswa" onsubmit="saveSiswa(event)">
+                <input type="hidden" id="siswa-id">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>NIS</label>
+                        <input type="text" id="siswa-nis" class="form-input" required>
+                    </div>
+                    <div class="form-group mt-3">
+                        <label>NISN</label>
+                        <input type="text" id="siswa-nisn" class="form-input">
+                    </div>
+                    <div class="form-group mt-3">
+                        <label>Nama Lengkap</label>
+                        <input type="text" id="siswa-nama" class="form-input" required>
+                    </div>
+                    <div class="form-group mt-3">
+                        <label>Jenis Kelamin</label>
+                        <select id="siswa-jk" class="form-input" required>
+                            <option value="L">Laki-laki</option>
+                            <option value="P">Perempuan</option>
+                        </select>
+                    </div>
+                    <div class="form-group mt-3">
+                        <label>Kelas Aktif</label>
+                        <select id="siswa-kelas" class="form-input" required>
+                            <option value="">-- Pilih Kelas --</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <select id="filter-kelas-siswa" class="form-input" onchange="filterSiswa()">
-                        <option value="">-- Semua Kelas --</option>
-                    </select>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modal-siswa')">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan Siswa</button>
                 </div>
-            </div>
-
-            <div class="table-responsive">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>NIS / NISN</th>
-                            <th>Nama Lengkap</th>
-                            <th>L/P</th>
-                            <th>Kelas Aktif</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="table-siswa-body">
-                        <tr><td colspan="5" class="text-center text-muted">Memuat data...</td></tr>
-                    </tbody>
-                </table>
-            </div>
+            </form>
         </div>
     </div>
-</section>
 
-<!-- MODAL FORM KELAS -->
-<div id="modal-kelas" class="modal-overlay hidden">
-    <div class="modal-box">
-        <div class="modal-header">
-            <h3 id="modal-kelas-title">Tambah Kelas</h3>
-        </div>
-        <form id="form-kelas" onsubmit="saveKelas(event)">
-            <input type="hidden" id="kelas-id">
+    <!-- MODAL DETAIL SISWA -->
+    <div id="modal-detail-siswa" class="modal-overlay hidden">
+        <div class="modal-box" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3>Detail & Riwayat Siswa</h3>
+            </div>
             <div class="modal-body">
-                <div class="form-group">
-                    <label>Nama Kelas</label>
-                    <input type="text" id="kelas-nama" class="form-input" placeholder="Contoh: VII A" required>
-                </div>
-                <div class="form-group mt-3">
-                    <label>Wali Kelas</label>
-                    <select id="kelas-wali" class="form-input">
-                        <option value="">-- Pilih Wali Kelas --</option>
-                    </select>
-                </div>
-                <div class="form-group mt-3">
-                    <label>Tahun Ajaran</label>
-                    <select id="kelas-ta" class="form-input" required>
-                        <option value="">-- Pilih Tahun Ajaran --</option>
-                    </select>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeModal('modal-kelas')">Batal</button>
-                <button type="submit" class="btn btn-primary">Simpan Kelas</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- MODAL FORM SISWA -->
-<div id="modal-siswa" class="modal-overlay hidden">
-    <div class="modal-box">
-        <div class="modal-header">
-            <h3 id="modal-siswa-title">Tambah Siswa</h3>
-        </div>
-        <form id="form-siswa" onsubmit="saveSiswa(event)">
-            <input type="hidden" id="siswa-id">
-            <div class="modal-body">
-                <div class="form-group">
-                    <label>NIS</label>
-                    <input type="text" id="siswa-nis" class="form-input" required>
-                </div>
-                <div class="form-group mt-3">
-                    <label>NISN</label>
-                    <input type="text" id="siswa-nisn" class="form-input">
-                </div>
-                <div class="form-group mt-3">
-                    <label>Nama Lengkap</label>
-                    <input type="text" id="siswa-nama" class="form-input" required>
-                </div>
-                <div class="form-group mt-3">
-                    <label>Jenis Kelamin</label>
-                    <select id="siswa-jk" class="form-input" required>
-                        <option value="L">Laki-laki</option>
-                        <option value="P">Perempuan</option>
-                    </select>
-                </div>
-                <div class="form-group mt-3">
-                    <label>Kelas Aktif</label>
-                    <select id="siswa-kelas" class="form-input" required>
-                        <option value="">-- Pilih Kelas --</option>
-                    </select>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeModal('modal-siswa')">Batal</button>
-                <button type="submit" class="btn btn-primary">Simpan Siswa</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- MODAL DETAIL & RIWAYAT KELAS SISWA -->
-<div id="modal-detail-siswa" class="modal-overlay hidden">
-    <div class="modal-box" style="max-width: 600px;">
-        <div class="modal-header">
-            <h3>Detail & Riwayat Siswa</h3>
-        </div>
-        <div class="modal-body">
-            <div id="detail-siswa-info" class="mb-3"></div>
-            <h4>Riwayat Kenaikan / Pindah Kelas</h4>
-            <div class="table-responsive mt-2">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Tahun Ajaran</th>
-                            <th>Kelas</th>
-                            <th>Tanggal Dicatat</th>
-                        </tr>
-                    </thead>
-                    <tbody id="table-riwayat-kelas">
-                        <tr><td colspan="3" class="text-center">Memuat riwayat...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" onclick="closeModal('modal-detail-siswa')">Tutup</button>
-        </div>
-    </div>
-</div>
-
-<!-- MODAL PINDAH / NAIK KELAS -->
-<div id="modal-pindah-kelas" class="modal-overlay hidden">
-    <div class="modal-box">
-        <div class="modal-header">
-            <h3>Pindahkan / Naik Kelas Siswa</h3>
-        </div>
-        <form onsubmit="confirmPindahKelas(event)">
-            <input type="hidden" id="pindah-siswa-id">
-            <div class="modal-body">
-                <p id="pindah-siswa-nama" class="mb-3"></p>
-                <div class="form-group">
-                    <label>Pilih Kelas Baru</label>
-                    <select id="pindah-kelas-tujuan" class="form-input" required>
-                        <option value="">-- Pilih Kelas Tujuan --</option>
-                    </select>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeModal('modal-pindah-kelas')">Batal</button>
-                <button type="submit" class="btn btn-primary">Proses Pindah Kelas</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- MODAL IMPOR EXCEL SISWA -->
-<div id="modal-import-siswa" class="modal-overlay hidden">
-    <div class="modal-box" style="max-width: 750px;">
-        <div class="modal-header">
-            <h3>Impor Data Siswa via Excel</h3>
-        </div>
-        <div class="modal-body">
-            <div class="form-group">
-                <label>Pilih Berkas Excel (.xlsx / .xls)</label>
-                <input type="file" id="excel-file-input" class="form-input" accept=".xlsx, .xls" onchange="processExcelFile(event)">
-            </div>
-            <div id="import-preview-area" class="mt-3 hidden">
-                <h4>Pratinjau & Validasi Data</h4>
-                <div id="import-summary-badge" class="mt-2 mb-2"></div>
-                <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                <div id="detail-siswa-info" class="mb-3"></div>
+                <h4>Riwayat Kenaikan / Pindah Kelas</h4>
+                <div class="table-responsive mt-2">
                     <table class="table">
                         <thead>
                             <tr>
-                                <th>Status</th>
-                                <th>NIS</th>
-                                <th>NISN</th>
-                                <th>Nama Lengkap</th>
+                                <th>Tahun Ajaran</th>
                                 <th>Kelas</th>
-                                <th>Keterangan</th>
+                                <th>Tanggal Dicatat</th>
                             </tr>
                         </thead>
-                        <tbody id="table-import-preview"></tbody>
+                        <tbody id="table-riwayat-kelas">
+                            <tr><td colspan="3" class="text-center">Memuat riwayat...</td></tr>
+                        </tbody>
                     </table>
                 </div>
             </div>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" onclick="closeModal('modal-import-siswa')">Batal</button>
-            <button type="button" id="btn-submit-import" class="btn btn-success hidden" onclick="commitImportSiswa()">Eksekusi Impor</button>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('modal-detail-siswa')">Tutup</button>
+            </div>
         </div>
     </div>
-</div>
+
+    <!-- MODAL PINDAH KELAS -->
+    <div id="modal-pindah-kelas" class="modal-overlay hidden">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>Pindahkan / Naik Kelas Siswa</h3>
+            </div>
+            <form onsubmit="confirmPindahKelas(event)">
+                <input type="hidden" id="pindah-siswa-id">
+                <div class="modal-body">
+                    <p id="pindah-siswa-nama" class="mb-3"></p>
+                    <div class="form-group">
+                        <label>Pilih Kelas Tujuan</label>
+                        <select id="pindah-kelas-tujuan" class="form-input" required>
+                            <option value="">-- Pilih Kelas Tujuan --</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modal-pindah-kelas')">Batal</button>
+                    <button type="submit" class="btn btn-primary">Proses Pindah Kelas</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL IMPOR EXCEL -->
+    <div id="modal-import-siswa" class="modal-overlay hidden">
+        <div class="modal-box" style="max-width: 750px;">
+            <div class="modal-header">
+                <h3>Impor Data Siswa via Excel</h3>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Pilih Berkas Excel (.xlsx / .xls)</label>
+                    <input type="file" id="excel-file-input" class="form-input" accept=".xlsx, .xls" onchange="processExcelFile(event)">
+                </div>
+                <div id="import-preview-area" class="mt-3 hidden">
+                    <h4>Pratinjau & Validasi Data</h4>
+                    <div id="import-summary-badge" class="mt-2 mb-2"></div>
+                    <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Status</th>
+                                    <th>NIS</th>
+                                    <th>NISN</th>
+                                    <th>Nama Lengkap</th>
+                                    <th>Kelas</th>
+                                    <th>Keterangan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-import-preview"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('modal-import-siswa')">Batal</button>
+                <button type="button" id="btn-submit-import" class="btn btn-success hidden" onclick="commitImportSiswa()">Eksekusi Impor</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Berkas Script JS -->
     <script src="js/supabase-config.js"></script>
     <script src="js/auth.js"></script>
