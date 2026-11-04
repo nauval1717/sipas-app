@@ -1,17 +1,17 @@
+// Storage Cache Data
 let cacheKelas = [];
 let cacheSiswa = [];
 let cacheGuru = [];
 let cacheTA = [];
 let pendingImportData = [];
 
+// Inisialisasi Otomatis saat DOM Siap
 document.addEventListener('DOMContentLoaded', () => {
-    // Inisialisasi data master ketika halaman dimuat
-    if (db) {
-        initDataMaster();
-    }
+    initDataMaster();
 });
 
 async function initDataMaster() {
+    if (!window.db) return;
     await Promise.all([
         loadTahunAjaran(),
         loadGuruList(),
@@ -20,15 +20,19 @@ async function initDataMaster() {
     ]);
 }
 
-// --- UTILITY MODAL ---
+// Fungsi Helper Tutup Modal
 function closeModal(modalId) {
-    document.getElementById(modalId).classList.add('hidden');
+    const el = document.getElementById(modalId);
+    if (el) el.classList.add('hidden');
 }
 
-// --- LOGIKA KELAS ---
+// ==========================================
+// 1. KELOLA DATA KELAS
+// ==========================================
 async function loadKelas() {
+    if (!window.db) return;
     try {
-        const { data, error } = await db
+        const { data, error } = await window.db
             .from('kelas')
             .select(`
                 id,
@@ -44,7 +48,7 @@ async function loadKelas() {
         renderTableKelas();
         populateDropdownKelas();
     } catch (err) {
-        showToast("Gagal memuat data kelas: " + err.message, "error");
+        if (window.showToast) showToast("Gagal memuat data kelas: " + err.message, "error");
     }
 }
 
@@ -96,36 +100,26 @@ function populateDropdownKelas() {
 
 async function openModalKelas(kelasId = null) {
     const modal = document.getElementById('modal-kelas');
-    if (!modal) {
-        console.error("Elemen #modal-kelas tidak ditemukan di HTML.");
-        return;
-    }
+    if (!modal) return;
 
     const form = document.getElementById('form-kelas');
     if (form) form.reset();
 
-    // Pastikan array tidak undefined agar tidak crash
-    const guruList = Array.isArray(cacheGuru) ? cacheGuru : [];
-    const taList = Array.isArray(cacheTA) ? cacheTA : [];
-
-    // isi dropdown Wali Kelas
     const selectWali = document.getElementById('kelas-wali');
     if (selectWali) {
         selectWali.innerHTML = `<option value="">-- Pilih Wali Kelas --</option>` + 
-            guruList.map(g => `<option value="${g.id}">${g.profiles?.nama_lengkap || 'Tanpa Nama'}</option>`).join('');
+            cacheGuru.map(g => `<option value="${g.id}">${g.profiles?.nama_lengkap || 'Tanpa Nama'}</option>`).join('');
     }
 
-    // Isi dropdown Tahun Ajaran
     const selectTA = document.getElementById('kelas-ta');
     if (selectTA) {
         selectTA.innerHTML = `<option value="">-- Pilih Tahun Ajaran --</option>` + 
-            taList.map(t => `<option value="${t.id}">${t.tahun} - ${t.semester}</option>`).join('');
+            cacheTA.map(t => `<option value="${t.id}">${t.tahun} - ${t.semester}</option>`).join('');
     }
 
     if (kelasId) {
         const title = document.getElementById('modal-kelas-title');
         if (title) title.innerText = "Edit Kelas";
-        
         const k = cacheKelas.find(item => item.id === kelasId);
         if (k) {
             document.getElementById('kelas-id').value = k.id;
@@ -139,11 +133,13 @@ async function openModalKelas(kelasId = null) {
         document.getElementById('kelas-id').value = '';
     }
 
-    // Tampilkan modal
     modal.classList.remove('hidden');
 }
+
 async function saveKelas(e) {
     e.preventDefault();
+    if (!window.db) return;
+
     const id = document.getElementById('kelas-id').value;
     const nama_kelas = document.getElementById('kelas-nama').value.trim();
     const wali_kelas_id = document.getElementById('kelas-wali').value || null;
@@ -151,18 +147,18 @@ async function saveKelas(e) {
 
     try {
         if (id) {
-            const { error } = await db.from('kelas').update({ nama_kelas, wali_kelas_id, tahun_ajaran_id }).eq('id', id);
+            const { error } = await window.db.from('kelas').update({ nama_kelas, wali_kelas_id, tahun_ajaran_id }).eq('id', id);
             if (error) throw error;
-            showToast("Kelas berhasil diperbarui.", "success");
+            if (window.showToast) showToast("Kelas berhasil diperbarui.", "success");
         } else {
-            const { error } = await db.from('kelas').insert([{ nama_kelas, wali_kelas_id, tahun_ajaran_id }]);
+            const { error } = await window.db.from('kelas').insert([{ nama_kelas, wali_kelas_id, tahun_ajaran_id }]);
             if (error) throw error;
-            showToast("Kelas berhasil ditambahkan.", "success");
+            if (window.showToast) showToast("Kelas berhasil ditambahkan.", "success");
         }
         closeModal('modal-kelas');
         await loadKelas();
     } catch (err) {
-        showToast("Gagal menyimpan kelas: " + err.message, "error");
+        if (window.showToast) showToast("Gagal menyimpan kelas: " + err.message, "error");
     }
 }
 
@@ -175,19 +171,22 @@ async function deleteKelas(id, nama, jumlahSiswa) {
     if (!confirm(`Apakah Anda yakin ingin menghapus kelas ${nama}?`)) return;
 
     try {
-        const { error } = await db.from('kelas').delete().eq('id', id);
+        const { error } = await window.db.from('kelas').delete().eq('id', id);
         if (error) throw error;
-        showToast("Kelas berhasil dihapus.", "success");
+        if (window.showToast) showToast("Kelas berhasil dihapus.", "success");
         await loadKelas();
     } catch (err) {
-        showToast("Gagal menghapus kelas: " + err.message, "error");
+        if (window.showToast) showToast("Gagal menghapus kelas: " + err.message, "error");
     }
 }
 
-// --- LOGIKA SISWA ---
+// ==========================================
+// 2. KELOLA DATA SISWA
+// ==========================================
 async function loadSiswa() {
+    if (!window.db) return;
     try {
-        const { data, error } = await db
+        const { data, error } = await window.db
             .from('siswa')
             .select(`
                 id,
@@ -203,15 +202,18 @@ async function loadSiswa() {
         if (error) throw error;
         cacheSiswa = data || [];
         filterSiswa();
-        renderTableKelas(); // Perbarui statistik jumlah siswa di tabel kelas
+        renderTableKelas();
     } catch (err) {
-        showToast("Gagal memuat data siswa: " + err.message, "error");
+        if (window.showToast) showToast("Gagal memuat data siswa: " + err.message, "error");
     }
 }
 
 function filterSiswa() {
-    const search = document.getElementById('search-siswa').value.toLowerCase();
-    const filterKelas = document.getElementById('filter-kelas-siswa').value;
+    const searchInput = document.getElementById('search-siswa');
+    const filterInput = document.getElementById('filter-kelas-siswa');
+    
+    const search = searchInput ? searchInput.value.toLowerCase() : '';
+    const filterKelas = filterInput ? filterInput.value : '';
 
     const filtered = cacheSiswa.filter(s => {
         const matchSearch = (s.nama_lengkap || '').toLowerCase().includes(search) || 
@@ -237,7 +239,7 @@ function renderTableSiswa(data) {
         <tr>
             <td><strong>${s.nis || '-'}</strong> / <small>${s.nisn || '-'}</small></td>
             <td>${s.nama_lengkap}</td>
-            <td>${s.jenis_kelamin}</td>
+            <td>${s.jenis_kelamin || 'L'}</td>
             <td><span class="badge">${s.kelas?.nama_kelas || 'Tanpa Kelas'}</span></td>
             <td>
                 <button class="btn btn-secondary" style="padding: 4px 8px;" onclick="viewDetailSiswa('${s.id}')">Detail</button>
@@ -250,24 +252,28 @@ function renderTableSiswa(data) {
 
 function openModalSiswa(siswaId = null) {
     const modal = document.getElementById('modal-siswa');
+    if (!modal) return;
+
     const form = document.getElementById('form-siswa');
-    form.reset();
+    if (form) form.reset();
 
     populateDropdownKelas();
 
     if (siswaId) {
-        document.getElementById('modal-siswa-title').innerText = "Edit Siswa";
+        const title = document.getElementById('modal-siswa-title');
+        if (title) title.innerText = "Edit Siswa";
         const s = cacheSiswa.find(item => item.id === siswaId);
         if (s) {
             document.getElementById('siswa-id').value = s.id;
             document.getElementById('siswa-nis').value = s.nis || '';
             document.getElementById('siswa-nisn').value = s.nisn || '';
             document.getElementById('siswa-nama').value = s.nama_lengkap;
-            document.getElementById('siswa-jk').value = s.jenis_kelamin;
+            document.getElementById('siswa-jk').value = s.jenis_kelamin || 'L';
             document.getElementById('siswa-kelas').value = s.kelas_id_aktif || '';
         }
     } else {
-        document.getElementById('modal-siswa-title').innerText = "Tambah Siswa";
+        const title = document.getElementById('modal-siswa-title');
+        if (title) title.innerText = "Tambah Siswa";
         document.getElementById('siswa-id').value = '';
     }
 
@@ -276,6 +282,8 @@ function openModalSiswa(siswaId = null) {
 
 async function saveSiswa(e) {
     e.preventDefault();
+    if (!window.db) return;
+
     const id = document.getElementById('siswa-id').value;
     const nis = document.getElementById('siswa-nis').value.trim();
     const nisn = document.getElementById('siswa-nisn').value.trim() || null;
@@ -285,57 +293,60 @@ async function saveSiswa(e) {
 
     try {
         if (id) {
-            const { error } = await db.from('siswa').update({
+            const { error } = await window.db.from('siswa').update({
                 nis, nisn, nama_lengkap, jenis_kelamin, kelas_id_aktif
             }).eq('id', id);
 
             if (error) throw error;
-            showToast("Data siswa diperbarui.", "success");
+            if (window.showToast) showToast("Data siswa diperbarui.", "success");
         } else {
-            const { data: newSiswa, error } = await db.from('siswa').insert([{
+            const { data: newSiswa, error } = await window.db.from('siswa').insert([{
                 nis, nisn, nama_lengkap, jenis_kelamin, kelas_id_aktif
             }]).select().single();
 
             if (error) throw error;
 
-            // Catat Riwayat Kelas Pertama Siswa
             if (kelas_id_aktif && newSiswa) {
                 const k = cacheKelas.find(item => item.id === kelas_id_aktif);
                 if (k && k.tahun_ajaran_id) {
-                    await db.from('riwayat_kelas_siswa').insert([{
+                    await window.db.from('riwayat_kelas_siswa').insert([{
                         siswa_id: newSiswa.id,
                         kelas_id: kelas_id_aktif,
                         tahun_ajaran_id: k.tahun_ajaran_id
                     }]);
                 }
             }
-            showToast("Siswa baru berhasil ditambahkan.", "success");
+            if (window.showToast) showToast("Siswa baru berhasil ditambahkan.", "success");
         }
         closeModal('modal-siswa');
         await loadSiswa();
     } catch (err) {
-        showToast("Gagal menyimpan siswa: " + err.message, "error");
+        if (window.showToast) showToast("Gagal menyimpan siswa: " + err.message, "error");
     }
 }
 
-// --- LIHAT DETAIL & RIWAYAT KELAS ---
 async function viewDetailSiswa(siswaId) {
     const s = cacheSiswa.find(item => item.id === siswaId);
     if (!s) return;
 
-    document.getElementById('detail-siswa-info').innerHTML = `
-        <p><strong>Nama:</strong> ${s.nama_lengkap}</p>
-        <p><strong>NIS / NISN:</strong> ${s.nis || '-'} / ${s.nisn || '-'}</p>
-        <p><strong>Jenis Kelamin:</strong> ${s.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan'}</p>
-        <p><strong>Kelas Aktif saat Ini:</strong> ${s.kelas?.nama_kelas || 'Tidak ada'}</p>
-    `;
+    const infoDiv = document.getElementById('detail-siswa-info');
+    if (infoDiv) {
+        infoDiv.innerHTML = `
+            <p><strong>Nama:</strong> ${s.nama_lengkap}</p>
+            <p><strong>NIS / NISN:</strong> ${s.nis || '-'} / ${s.nisn || '-'}</p>
+            <p><strong>Jenis Kelamin:</strong> ${s.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan'}</p>
+            <p><strong>Kelas Aktif saat Ini:</strong> ${s.kelas?.nama_kelas || 'Tidak ada'}</p>
+        `;
+    }
 
     const tbody = document.getElementById('table-riwayat-kelas');
-    tbody.innerHTML = `<tr><td colspan="3" class="text-center">Memuat riwayat...</td></tr>`;
-    document.getElementById('modal-detail-siswa').classList.remove('hidden');
+    if (tbody) tbody.innerHTML = `<tr><td colspan="3" class="text-center">Memuat riwayat...</td></tr>`;
+    
+    const modal = document.getElementById('modal-detail-siswa');
+    if (modal) modal.classList.remove('hidden');
 
     try {
-        const { data, error } = await db
+        const { data, error } = await window.db
             .from('riwayat_kelas_siswa')
             .select(`
                 created_at,
@@ -347,25 +358,25 @@ async function viewDetailSiswa(siswaId) {
 
         if (error) throw error;
 
-        if (!data || data.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="3" class="text-center text-muted">Belum ada riwayat kelas.</td></tr>`;
-            return;
+        if (tbody) {
+            if (!data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" class="text-center text-muted">Belum ada riwayat kelas.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = data.map(r => `
+                <tr>
+                    <td>${r.tahun_ajaran ? `${r.tahun_ajaran.tahun} (${r.tahun_ajaran.semester})` : '-'}</td>
+                    <td><strong>${r.kelas?.nama_kelas || '-'}</strong></td>
+                    <td>${new Date(r.created_at).toLocaleDateString('id-ID')}</td>
+                </tr>
+            `).join('');
         }
-
-        tbody.innerHTML = data.map(r => `
-            <tr>
-                <td>${r.tahun_ajaran ? `${r.tahun_ajaran.tahun} (${r.tahun_ajaran.semester})` : '-'}</td>
-                <td><strong>${r.kelas?.nama_kelas || '-'}</strong></td>
-                <td>${new Date(r.created_at).toLocaleDateString('id-ID')}</td>
-            </tr>
-        `).join('');
-
     } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="3" class="text-center text-danger">Gagal memuat riwayat.</td></tr>`;
+        if (tbody) tbody.innerHTML = `<tr><td colspan="3" class="text-center text-danger">Gagal memuat riwayat.</td></tr>`;
     }
 }
 
-// --- PINDAH KELAS SISWA ---
 function openModalPindahKelas(siswaId) {
     const s = cacheSiswa.find(item => item.id === siswaId);
     if (!s) return;
@@ -374,11 +385,14 @@ function openModalPindahKelas(siswaId) {
     document.getElementById('pindah-siswa-nama').innerText = `Siswa: ${s.nama_lengkap} (Kelas Saat Ini: ${s.kelas?.nama_kelas || '-'})`;
     populateDropdownKelas();
 
-    document.getElementById('modal-pindah-kelas').classList.remove('hidden');
+    const modal = document.getElementById('modal-pindah-kelas');
+    if (modal) modal.classList.remove('hidden');
 }
 
 async function confirmPindahKelas(e) {
     e.preventDefault();
+    if (!window.db) return;
+
     const siswaId = document.getElementById('pindah-siswa-id').value;
     const kelasTujuanId = document.getElementById('pindah-kelas-tujuan').value;
 
@@ -386,38 +400,39 @@ async function confirmPindahKelas(e) {
     if (!targetKelas) return;
 
     try {
-        // 1. Update kelas aktif siswa
-        const { error: errUpdate } = await db
+        const { error: errUpdate } = await window.db
             .from('siswa')
             .update({ kelas_id_aktif: kelasTujuanId })
             .eq('id', siswaId);
 
         if (errUpdate) throw errUpdate;
 
-        // 2. Catat ke tabel riwayat_kelas_siswa (mengabaikan duplikasi jika tahun ajaran sama)
         if (targetKelas.tahun_ajaran_id) {
-            await db.from('riwayat_kelas_siswa').upsert([{
+            await window.db.from('riwayat_kelas_siswa').upsert([{
                 siswa_id: siswaId,
                 kelas_id: kelasTujuanId,
                 tahun_ajaran_id: targetKelas.tahun_ajaran_id
             }], { onConflict: 'siswa_id, tahun_ajaran_id' });
         }
 
-        showToast("Siswa berhasil dipindahkan kelas.", "success");
+        if (window.showToast) showToast("Siswa berhasil dipindahkan kelas.", "success");
         closeModal('modal-pindah-kelas');
         await loadSiswa();
     } catch (err) {
-        showToast("Gagal memindahkan siswa: " + err.message, "error");
+        if (window.showToast) showToast("Gagal memindahkan siswa: " + err.message, "error");
     }
 }
 
-// --- LOGIKA IMPOR EXCEL SISWA ---
+// ==========================================
+// 3. FITUR IMPOR EXCEL SISWA
+// ==========================================
 function openModalImportSiswa() {
     document.getElementById('excel-file-input').value = '';
     document.getElementById('import-preview-area').classList.add('hidden');
     document.getElementById('btn-submit-import').classList.add('hidden');
     pendingImportData = [];
-    document.getElementById('modal-import-siswa').classList.remove('hidden');
+    const modal = document.getElementById('modal-import-siswa');
+    if (modal) modal.classList.remove('hidden');
 }
 
 function processExcelFile(event) {
@@ -434,7 +449,7 @@ function processExcelFile(event) {
 
             validateAndPreviewImport(rawRows);
         } catch (err) {
-            showToast("Gagal membaca file Excel. Pastikan format benar.", "error");
+            if (window.showToast) showToast("Gagal membaca file Excel.", "error");
         }
     };
     reader.readAsArrayBuffer(file);
@@ -449,10 +464,10 @@ function validateAndPreviewImport(rows) {
     const fileNISSet = new Set();
 
     const tbody = document.getElementById('table-import-preview');
+    if (!tbody) return;
     tbody.innerHTML = '';
 
     rows.forEach((row, index) => {
-        // Pemetaan nama kolom sensitif
         const nis = String(row.NIS || row.nis || '').trim();
         const nisn = String(row.NISN || row.nisn || '').trim();
         const nama = String(row['Nama Lengkap'] || row.nama_lengkap || row.Nama || '').trim();
@@ -464,13 +479,11 @@ function validateAndPreviewImport(rows) {
         if (!nis) { isValid = false; errors.push("NIS kosong"); }
         if (!nama) { isValid = false; errors.push("Nama kosong"); }
 
-        // Cek Duplikat NIS di Database
         if (nis && existingNIS.has(nis.toLowerCase())) {
             isValid = false;
             errors.push("NIS sudah ada di database");
         }
 
-        // Cek Duplikat NIS di dalam File
         if (nis && fileNISSet.has(nis.toLowerCase())) {
             isValid = false;
             errors.push("NIS ganda di dalam file Excel");
@@ -478,7 +491,6 @@ function validateAndPreviewImport(rows) {
             fileNISSet.add(nis.toLowerCase());
         }
 
-        // Pemetaan Kelas
         const matchedKelas = cacheKelas.find(k => k.nama_kelas.toLowerCase() === namaKelas.toLowerCase());
         if (namaKelas && !matchedKelas) {
             errors.push(`Kelas '${namaKelas}' tidak ditemukan (akan dikosongkan)`);
@@ -487,7 +499,6 @@ function validateAndPreviewImport(rows) {
         if (isValid) validCount++; else invalidCount++;
 
         pendingImportData.push({
-            rowNumber: index + 1,
             nis,
             nisn,
             nama_lengkap: nama,
@@ -522,35 +533,53 @@ function validateAndPreviewImport(rows) {
 }
 
 async function commitImportSiswa() {
+    if (!window.db) return;
+
     const validRows = pendingImportData.filter(d => d.isValid).map(d => ({
         nis: d.nis,
         nisn: d.nisn || null,
         nama_lengkap: d.nama_lengkap,
-        jenis_kelamin: 'L', // Nilai bawaan jika tidak ada di kolom excel
+        jenis_kelamin: 'L',
         kelas_id_aktif: d.kelas_id_aktif
     }));
 
     if (validRows.length === 0) return;
 
     try {
-        const { error } = await db.from('siswa').insert(validRows);
+        const { error } = await window.db.from('siswa').insert(validRows);
         if (error) throw error;
 
-        showToast(`Berhasil mengimpor ${validRows.length} data siswa baru.`, "success");
+        if (window.showToast) showToast(`Berhasil mengimpor ${validRows.length} data siswa.`, "success");
         closeModal('modal-import-siswa');
         await loadSiswa();
     } catch (err) {
-        showToast("Gagal menyimpan data impor: " + err.message, "error");
+        if (window.showToast) showToast("Gagal menyimpan data impor: " + err.message, "error");
     }
 }
 
-// --- HELPER DATA GURU & TAHUN AJARAN ---
 async function loadGuruList() {
-    const { data } = await db.from('guru').select('id, profiles(nama_lengkap)');
+    if (!window.db) return;
+    const { data } = await window.db.from('guru').select('id, profiles(nama_lengkap)');
     cacheGuru = data || [];
 }
 
 async function loadTahunAjaran() {
-    const { data } = await db.from('tahun_ajaran').select('id, tahun, semester');
+    if (!window.db) return;
+    const { data } = await window.db.from('tahun_ajaran').select('id, tahun, semester');
     cacheTA = data || [];
 }
+
+// Eksplisitkan Seluruh Fungsi Modal ke Scope Window
+window.openModalKelas = openModalKelas;
+window.saveKelas = saveKelas;
+window.deleteKelas = deleteKelas;
+window.openModalSiswa = openModalSiswa;
+window.saveSiswa = saveSiswa;
+window.filterSiswa = filterSiswa;
+window.viewDetailSiswa = viewDetailSiswa;
+window.openModalPindahKelas = openModalPindahKelas;
+window.confirmPindahKelas = confirmPindahKelas;
+window.openModalImportSiswa = openModalImportSiswa;
+window.processExcelFile = processExcelFile;
+window.commitImportSiswa = commitImportSiswa;
+window.closeModal = closeModal;
