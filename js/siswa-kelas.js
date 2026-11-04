@@ -103,6 +103,7 @@ async function saveGuru(e) {
 
     try {
         if (id) {
+            // Update data guru & profil yang sudah ada
             const g = cacheGuru.find(item => item.id === id);
             if (g && g.profile_id) {
                 await window.db.from('profiles').update({ nama_lengkap: nama }).eq('id', g.profile_id);
@@ -111,15 +112,19 @@ async function saveGuru(e) {
             if (error) throw error;
             if (window.showToast) showToast("Data guru diperbarui.", "success");
         } else {
-            const { data: newProf, error: errProf } = await window.db.from('profiles').insert([{
+            // Hasilkan ID UUID baru secara manual untuk profiles
+            const newProfileId = crypto.randomUUID();
+
+            const { error: errProf } = await window.db.from('profiles').insert([{
+                id: newProfileId,
                 nama_lengkap: nama,
                 role: 'guru'
-            }]).select().single();
+            }]);
 
             if (errProf) throw errProf;
 
             const { error: errGuru } = await window.db.from('guru').insert([{
-                profile_id: newProf.id,
+                profile_id: newProfileId,
                 nip,
                 no_hp
             }]);
@@ -133,7 +138,6 @@ async function saveGuru(e) {
         if (window.showToast) showToast("Gagal menyimpan guru: " + err.message, "error");
     }
 }
-
 // ==========================================
 // 2. DATA KARAKTER & PERILAKU
 // ==========================================
