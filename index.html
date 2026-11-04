@@ -185,6 +185,7 @@
                         <div class="card-header flex-between">
                             <h2>Kelola Data Siswa</h2>
                             <div class="action-buttons">
+                                <button class="btn btn-secondary" onclick="downloadTemplateSiswa()">📥 Unduh Template</button>
                                 <button class="btn btn-success" onclick="openModalImportSiswa()">📥 Impor Excel</button>
                                 <button class="btn btn-primary" onclick="openModalSiswa()">+ Tambah Siswa</button>
                             </div>
@@ -226,6 +227,8 @@
                     <div class="card">
                         <div class="card-header flex-between">
                             <h2>Kelola Data Guru</h2>
+                            <button class="btn btn-secondary" onclick="downloadTemplateGuru()">📥 Unduh Template</button>
+                            <button class="btn btn-success" onclick="openModalImportGuru()">📥 Impor Excel</button>
                             <button class="btn btn-primary" onclick="openModalGuru()">+ Tambah Guru</button>
                         </div>
                         <div class="card-body">
@@ -491,9 +494,7 @@
                     </div>
                     <div class="form-group mt-3">
                         <label>Tahun Ajaran</label>
-                        <select id="kelas-ta" class="form-input" required>
-                            <option value="">-- Pilih Tahun Ajaran --</option>
-                        </select>
+                        <input type="text" id="kelas-ta" class="form-input" placeholder="Contoh: 2025/2026 - Ganjil" required>
                     </div>
                 </div>
                 <div class="modal-footer">
