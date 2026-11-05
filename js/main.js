@@ -12,7 +12,7 @@ const pageTitles = {
     'pengaturan': 'Pengaturan Aplikasi'
 };
 
-// Fungsi perpindahan halaman antarmuka (Dilengkapi validasi hak akses role)
+// Fungsi perpindahan halaman antarmuka (Dilengkapi auto-reload data dari Supabase)
 function switchPage(pageId, event) {
     if (event) event.preventDefault();
 
@@ -33,14 +33,21 @@ function switchPage(pageId, event) {
         targetPage.classList.remove('hidden');
     }
 
-    // Inisialisasi halaman Input Penilaian saat dibuka
+    // AUTO-LOAD DATA DARI SUPABASE KETIKA MENU DIKLIK (LAPTOP & HP)
+    if (pageId === 'dashboard' && window.loadDashboardData) {
+        window.loadDashboardData();
+    }
     if (pageId === 'input-penilaian' && window.initInputPenilaian) {
         window.initInputPenilaian();
     }
-
-    // Muat data Karakter & Perilaku saat halaman Data Karakter dibuka
     if (pageId === 'karakter' && window.loadKarakter) {
         window.loadKarakter();
+    }
+    if (pageId === 'skor-siswa' && window.loadSkorSiswa) {
+        window.loadSkorSiswa(); // Fix data laptop tidak update
+    }
+    if (pageId === 'pelanggaran' && window.loadPelanggaran) {
+        window.loadPelanggaran(); // Fix data laptop tidak update
     }
 
     // Perbarui judul halaman di bar topbar
