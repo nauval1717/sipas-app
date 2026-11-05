@@ -272,25 +272,44 @@ async function saveKarakter(e) {
 // ==========================================
 // 3. DATA KELAS
 // ==========================================
+// FUNGSI LOAD KELAS (KEBAL ERROR EMBED)
 async function loadKelas() {
     if (!window.db) return;
     try {
-        const { data, error } = await window.db
-            .from('kelas')
-            .select(`
-                id,
-                nama_kelas,
-                tahun_ajaran_id,
-                wali_kelas_id,
-                tahun_ajaran (tahun, semester),
-                guru:wali_kelas_id (profiles(nama_lengkap))
-            `);
+        // Ambil data kelas, guru, tahun ajaran, dan siswa secara terpisah untuk menghindari error relasi
+        const [resKelas, resGuru, resTA, resSiswa] = await Promise.all([
+            window.db.from('kelas').select('*').order('nama_kelas'),
+            window.db.from('guru').select('id, profile_id, profiles:profile_id(nama_lengkap)'),
+            window.db.from('tahun_ajaran').select('id, tahun, semester'),
+            window.db.from('siswa').select('id, kelas_id_aktif')
+        ]);
 
-        if (error) throw error;
-        cacheKelas = data || [];
+        if (resKelas.error) throw resKelas.error;
+
+        const dataKelas = resKelas.data || [];
+        const dataGuru = resGuru.data || [];
+        const dataTA = resTA.data || [];
+
+        // Pemetaan Nama Wali Kelas & Tahun Ajaran
+        const mapGuru = new Map(dataGuru.map(g => [g.id, g.profiles?.nama_lengkap || '-']));
+        const mapTA = new Map(dataTA.map(t => [t.id, t]));
+
+        // Isi cacheKelas (dipakai modal edit, dropdown, impor siswa, dll.)
+        cacheKelas = dataKelas.map(k => ({
+            ...k,
+            tahun_ajaran: mapTA.get(k.tahun_ajaran_id) || null,
+            guru: k.wali_kelas_id
+                ? { profiles: { nama_lengkap: mapGuru.get(k.wali_kelas_id) || '-' } }
+                : null
+        }));
+
         renderTableKelas();
         populateDropdownKelas();
+
     } catch (err) {
+        console.error("Gagal memuat kelas:", err);
+        const tbody = document.getElementById('table-kelas-body');
+        if (tbody) tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Gagal memuat kelas: ${err.message}</td></tr>`;
         if (window.showToast) showToast("Gagal memuat data kelas: " + err.message, "error");
     }
 }
@@ -1027,6 +1046,11 @@ window.deleteGuru = deleteGuru;
 // ==========================================
 // 1. FITUR IMPOR GURU VIA EXCEL
 // ==========================================
+function openModalImportGuru() {
+    const modal = document.getElementById('modal-import-guru');
+    if (modal) modal.classList.remove('hidden');
+}
+
 function downloadTemplateGuru() {
     const dataTemplate = [
         ["NIP", "Nama Lengkap", "No HP"],
@@ -1052,7 +1076,7 @@ async function processExcelGuru(event) {
             const sheetName = workbook.SheetNames[0];
             const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
 
-            if (rows.length === 0) {
+            if (!rows || rows.length === 0) {
                 if (window.showToast) showToast("Berkas Excel kosong!", "error");
                 return;
             }
@@ -1070,7 +1094,7 @@ async function processExcelGuru(event) {
                     continue;
                 }
 
-                // Cek duplikasi NIP jika NIP diisi
+                // Cek duplikasi NIP
                 if (nip) {
                     const { data: exist } = await window.db.from('guru').select('id').eq('nip', nip).maybeSingle();
                     if (exist) {
@@ -1079,8 +1103,9 @@ async function processExcelGuru(event) {
                     }
                 }
 
-                // Buat profil baru
+                // Buat ID Profil Baru
                 const newProfileId = crypto.randomUUID();
+
                 const { error: errProf } = await window.db.from('profiles').insert([{
                     id: newProfileId,
                     nama_lengkap: nama,
@@ -1092,7 +1117,6 @@ async function processExcelGuru(event) {
                     continue;
                 }
 
-                // Buat data guru
                 const { error: errGuru } = await window.db.from('guru').insert([{
                     profile_id: newProfileId,
                     nip: nip || null,
@@ -1112,7 +1136,7 @@ async function processExcelGuru(event) {
             await loadGuru();
 
         } catch (err) {
-            if (window.showToast) showToast("Gagal memproses Excel Guru: " + err.message, "error");
+            if (window.showToast) showToast("Gagal memproses file Excel: " + err.message, "error");
         }
     };
     reader.readAsArrayBuffer(file);
@@ -1154,3 +1178,5 @@ window.downloadTemplateGuru = downloadTemplateGuru;
 window.processExcelGuru = processExcelGuru;
 window.deletePerilaku = deletePerilaku;
 window.deleteKategoriKarakter = deleteKategoriKarakter;
+window.loadKelas = loadKelas;
+window.openModalImportGuru = openModalImportGuru;
