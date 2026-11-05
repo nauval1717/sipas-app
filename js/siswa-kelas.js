@@ -978,31 +978,8 @@ function downloadTemplateSiswa() {
     XLSX.writeFile(wb, "Template_Data_Siswa.xlsx");
 }
 
-// --- KATEGORI KARAKTER DINAMIS ---
-function openModalKategoriKarakter() {
-    const modal = document.getElementById('modal-kategori-karakter');
-    if (modal) modal.classList.remove('hidden');
-}
-
-async function saveKategoriKarakter(e) {
-    e.preventDefault();
-    if (!window.db) return;
-    const nama_kategori = document.getElementById('kategori-nama').value.trim();
-    try {
-        const { error } = await window.db.from('kategori_karakter').insert([{ nama_kategori }]);
-        if (error) throw error;
-        if (window.showToast) showToast("Kategori karakter ditambahkan.", "success");
-        closeModal('modal-kategori-karakter');
-        await loadKategoriKarakter();
-    } catch (err) {
-        if (window.showToast) showToast("Gagal menyimpan kategori: " + err.message, "error");
-    }
-}
-
 // Export fungsi ke window
 window.downloadTemplateSiswa = downloadTemplateSiswa;
-window.openModalKategoriKarakter = openModalKategoriKarakter;
-window.saveKategoriKarakter = saveKategoriKarakter;
 
 // --- FUNGSI HAPUS SISWA ---
 async function deleteSiswa(siswaId, nama) {
@@ -1152,27 +1129,106 @@ async function processExcelGuru(event) {
     reader.readAsArrayBuffer(file);
 }
 
+// Global Export
+window.downloadTemplateGuru = downloadTemplateGuru;
+window.processExcelGuru = processExcelGuru;
+window.loadKelas = loadKelas;
+window.openModalImportGuru = openModalImportGuru;
+
 // ==========================================
-// FITUR HAPUS KATEGORI KARAKTER
+// FITUR KELOLA & HAPUS KATEGORI KARAKTER
 // ==========================================
+
+// 1. Buka Modal & Muat Daftar Kategori
+function openModalKategoriKarakter() {
+    const modal = document.getElementById('modal-kategori-karakter');
+    if (modal) {
+        modal.classList.remove('hidden');
+        loadKategoriList();
+    }
+}
+
+// 2. Tampilkan Tabel Daftar Kategori di Modal
+async function loadKategoriList() {
+    if (!window.db) return;
+    const tbody = document.getElementById('table-kategori-list');
+    if (!tbody) return;
+
+    try {
+        const { data, error } = await window.db
+            .from('kategori_karakter')
+            .select('*')
+            .order('nama_kategori');
+
+        if (error) throw error;
+
+        // Sinkronkan cache agar dropdown kategori di modal perilaku selalu terbaru
+        cacheKategori = data || [];
+
+        if (!data || data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="2" class="text-center text-muted">Belum ada kategori.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = data.map(k => `
+            <tr>
+                <td><strong>${k.nama_kategori}</strong></td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-danger" style="padding: 2px 8px; font-size: 11px;" onclick="deleteKategoriKarakter('${k.id}', '${(k.nama_kategori || '').replace(/'/g, "\\'")}')">
+                        🗑️ Hapus
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+
+    } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="2" class="text-center text-danger">Gagal memuat: ${err.message}</td></tr>`;
+    }
+}
+
+// 3. Simpan Kategori Baru
+async function saveKategoriKarakter(e) {
+    e.preventDefault();
+    const input = document.getElementById('kategori-nama');
+    const nama = input ? input.value.trim() : '';
+
+    if (!nama) return;
+
+    try {
+        const { error } = await window.db.from('kategori_karakter').insert([{ nama_kategori: nama }]);
+        if (error) throw error;
+
+        if (window.showToast) showToast(`Kategori "${nama}" berhasil ditambahkan.`, "success");
+        if (input) input.value = '';
+
+        await loadKategoriList();
+        if (window.loadKarakter) await window.loadKarakter();
+    } catch (err) {
+        if (window.showToast) showToast("Gagal menyimpan kategori: " + err.message, "error");
+    }
+}
+
+// 4. Hapus Kategori
 async function deleteKategoriKarakter(id, nama) {
-    if (!confirm(`Apakah Anda yakin ingin menghapus kategori "${nama}"?\n\nSemua perilaku di bawah kategori ini juga akan terhapus!`)) return;
+    if (!confirm(`Apakah Anda yakin ingin menghapus kategori "${nama}"?\n\n⚠️ PERHATIAN: Seluruh indikator perilaku yang berada di dalam kategori ini juga akan ikut terhapus.`)) {
+        return;
+    }
 
     try {
         const { error } = await window.db.from('kategori_karakter').delete().eq('id', id);
         if (error) throw error;
 
         if (window.showToast) showToast(`Kategori "${nama}" berhasil dihapus.`, "success");
-        await loadKategoriKarakter();
-        await loadKarakter();
+        
+        await loadKategoriList();
+        if (window.loadKarakter) await window.loadKarakter();
     } catch (err) {
         if (window.showToast) showToast("Gagal menghapus kategori: " + err.message, "error");
     }
 }
 
-// Global Export
-window.downloadTemplateGuru = downloadTemplateGuru;
-window.processExcelGuru = processExcelGuru;
+// Export ke scope global window
+window.openModalKategoriKarakter = openModalKategoriKarakter;
+window.loadKategoriList = loadKategoriList;
+window.saveKategoriKarakter = saveKategoriKarakter;
 window.deleteKategoriKarakter = deleteKategoriKarakter;
-window.loadKelas = loadKelas;
-window.openModalImportGuru = openModalImportGuru;
