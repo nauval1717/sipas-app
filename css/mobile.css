@@ -12,7 +12,9 @@
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     }
 
-    /* 2. SIDEBAR DIKUNCI PRESISI DI VIEWPORT AKTIF (HP) */
+    /* 2. PERBAIKAN SIDEBAR HP (SEMUA VARIABEL JS) */
+
+    /* WADAH SIDEBAR */
     .sidebar {
         position: fixed !important;
         top: 0 !important;
@@ -21,16 +23,33 @@
         height: 100vh !important;
         height: 100dvh !important;
         z-index: 9999 !important;
+        display: block !important; /* Mencegah tersembunyi via display:none */
         overflow-y: auto !important;
         -webkit-overflow-scrolling: touch;
         transition: left 0.3s ease !important;
         box-shadow: 4px 0 16px rgba(0, 0, 0, 0.2);
     }
 
-    /* Saat Sidebar Dibuka via Tombol Garis 3 */
+    /* MUNCULKAN SIDEBAR SAAT KELAS JS AKTIF */
     .sidebar.active,
-    .sidebar.show {
+    .sidebar.show,
+    .sidebar.open,
+    .sidebar.visible,
+    body.sidebar-open .sidebar,
+    body.sidebar-active .sidebar,
+    body.show-sidebar .sidebar {
         left: 0 !important;
+    }
+
+    /* PASTIKAN TOMBOL GARIS 3 SELALU BISA DIKLIK */
+    .btn-hamburger,
+    .menu-toggle,
+    .sidebar-toggle,
+    #sidebarToggle,
+    #menu-btn {
+        z-index: 1001 !important;
+        cursor: pointer !important;
+        position: relative !important;
     }
 
     /* Overlay Redup Saat Sidebar Terbuka */
