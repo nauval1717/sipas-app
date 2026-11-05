@@ -1023,3 +1023,134 @@ async function deleteGuru(guruId, nama) {
 
 // Daftarkan fungsi ke scope global window
 window.deleteGuru = deleteGuru;
+
+// ==========================================
+// 1. FITUR IMPOR GURU VIA EXCEL
+// ==========================================
+function downloadTemplateGuru() {
+    const dataTemplate = [
+        ["NIP", "Nama Lengkap", "No HP"],
+        ["198501012010011001", "Drs. Ahmad Dahlan, M.Pd.", "081234567890"],
+        ["199002022015022002", "Siti Rahmawati, S.Pd.", "085712345678"]
+    ];
+
+    const ws = XLSX.utils.aoa_to_sheet(dataTemplate);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Template_Guru");
+    XLSX.writeFile(wb, "Template_Impor_Guru_SIPAS.xlsx");
+}
+
+async function processExcelGuru(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheetName = workbook.SheetNames[0];
+            const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+            if (rows.length === 0) {
+                if (window.showToast) showToast("Berkas Excel kosong!", "error");
+                return;
+            }
+
+            let successCount = 0;
+            let failCount = 0;
+
+            for (const row of rows) {
+                const nip = String(row["NIP"] || row["nip"] || "").trim();
+                const nama = String(row["Nama Lengkap"] || row["Nama"] || row["nama"] || "").trim();
+                const no_hp = String(row["No HP"] || row["no_hp"] || row["No. HP"] || "").trim();
+
+                if (!nama) {
+                    failCount++;
+                    continue;
+                }
+
+                // Cek duplikasi NIP jika NIP diisi
+                if (nip) {
+                    const { data: exist } = await window.db.from('guru').select('id').eq('nip', nip).maybeSingle();
+                    if (exist) {
+                        failCount++;
+                        continue;
+                    }
+                }
+
+                // Buat profil baru
+                const newProfileId = crypto.randomUUID();
+                const { error: errProf } = await window.db.from('profiles').insert([{
+                    id: newProfileId,
+                    nama_lengkap: nama,
+                    role: 'guru'
+                }]);
+
+                if (errProf) {
+                    failCount++;
+                    continue;
+                }
+
+                // Buat data guru
+                const { error: errGuru } = await window.db.from('guru').insert([{
+                    profile_id: newProfileId,
+                    nip: nip || null,
+                    no_hp: no_hp || null
+                }]);
+
+                if (errGuru) failCount++;
+                else successCount++;
+            }
+
+            if (window.showToast) {
+                showToast(`Impor Guru Selesai: ${successCount} berhasil, ${failCount} gagal/duplikat.`, successCount > 0 ? "success" : "error");
+            }
+
+            closeModal('modal-import-guru');
+            event.target.value = '';
+            await loadGuru();
+
+        } catch (err) {
+            if (window.showToast) showToast("Gagal memproses Excel Guru: " + err.message, "error");
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+// ==========================================
+// 2. FITUR HAPUS KATEGORI & PERILAKU KARAKTER
+// ==========================================
+async function deletePerilaku(id, nama) {
+    if (!confirm(`Apakah Anda yakin ingin menghapus perilaku "${nama}"?`)) return;
+
+    try {
+        const { error } = await window.db.from('master_perilaku').delete().eq('id', id);
+        if (error) throw error;
+
+        if (window.showToast) showToast(`Perilaku "${nama}" berhasil dihapus.`, "success");
+        if (window.loadKarakter) await window.loadKarakter();
+    } catch (err) {
+        if (window.showToast) showToast("Gagal menghapus perilaku: " + err.message, "error");
+    }
+}
+
+async function deleteKategoriKarakter(id, nama) {
+    if (!confirm(`Apakah Anda yakin ingin menghapus kategori "${nama}"?\n\nSemua perilaku di bawah kategori ini juga akan terhapus!`)) return;
+
+    try {
+        const { error } = await window.db.from('kategori_karakter').delete().eq('id', id);
+        if (error) throw error;
+
+        if (window.showToast) showToast(`Kategori "${nama}" berhasil dihapus.`, "success");
+        if (window.loadKarakter) await window.loadKarakter();
+    } catch (err) {
+        if (window.showToast) showToast("Gagal menghapus kategori: " + err.message, "error");
+    }
+}
+
+// Global Export
+window.downloadTemplateGuru = downloadTemplateGuru;
+window.processExcelGuru = processExcelGuru;
+window.deletePerilaku = deletePerilaku;
+window.deleteKategoriKarakter = deleteKategoriKarakter;
