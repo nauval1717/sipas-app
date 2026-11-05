@@ -520,6 +520,7 @@ function renderTableSiswa(data) {
                 <button class="btn btn-secondary" style="padding: 4px 8px;" onclick="viewDetailSiswa('${s.id}')">Detail</button>
                 <button class="btn btn-secondary" style="padding: 4px 8px;" onclick="openModalSiswa('${s.id}')">Edit</button>
                 <button class="btn btn-primary" style="padding: 4px 8px;" onclick="openModalPindahKelas('${s.id}')">Pindah Kelas</button>
+                <button class="btn btn-danger" style="padding: 4px 8px;" onclick="deleteSiswa('${s.id}', '${(s.nama_lengkap || '').replace(/'/g, "\\'")}')">Hapus</button>
             </td>
         </tr>
     `).join('');
