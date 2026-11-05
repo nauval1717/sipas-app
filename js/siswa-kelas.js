@@ -972,3 +972,23 @@ window.downloadTemplateGuru = downloadTemplateGuru;
 window.deleteGuru = deleteGuru;
 window.openModalKategoriKarakter = openModalKategoriKarakter;
 window.saveKategoriKarakter = saveKategoriKarakter;
+
+// --- FUNGSI HAPUS SISWA ---
+async function deleteSiswa(siswaId, nama) {
+    if (!confirm(`Apakah Anda yakin ingin menghapus data siswa "${nama}"?\n\nCatatan: Seluruh riwayat kelas dan penilaian sikap siswa ini juga akan terhapus.`)) {
+        return;
+    }
+
+    try {
+        const { error } = await window.db.from('siswa').delete().eq('id', siswaId);
+        if (error) throw error;
+
+        if (window.showToast) showToast(`Data siswa ${nama} berhasil dihapus.`, "success");
+        await loadSiswa();
+    } catch (err) {
+        if (window.showToast) showToast("Gagal menghapus siswa: " + err.message, "error");
+    }
+}
+
+// Daftarkan fungsi ke scope global window
+window.deleteSiswa = deleteSiswa;
