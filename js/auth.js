@@ -61,8 +61,14 @@ async function loadUserProfile(userId) {
         }
 
         currentProfile = data;
+
+        // Sinkronkan ke window agar bisa diakses file JS lain
+        window.currentProfile = data;
+        window.currentUserRole = data.role || 'guru';
+
         renderUserInterface();
     } catch (err) {
+        console.error("Gagal memuat profil:", err);
         showLoginError("Terjadi kesalahan saat memuat profil.");
         resetAppState();
     } finally {
@@ -70,7 +76,7 @@ async function loadUserProfile(userId) {
     }
 }
 
-// Penanganan Formulir Login Email & Password (Menggantikan versi lama)
+// Penanganan Formulir Login Email & Password
 async function handleLogin(event) {
     event.preventDefault();
     hideLoginError();
@@ -105,7 +111,27 @@ async function handleLogin(event) {
     }
 }
 
-// --- PEMBARUAN RENDER ANTARMUKA (TRANSISI BERHASIL MASUK) ---
+// --- FUNGSI UPDATE TAMPILAN HEADER PROFIL ---
+function updateUserHeaderProfile(profile, email) {
+    const elName = document.getElementById('user-name');
+    const elRole = document.getElementById('user-role');
+
+    if (elName) {
+        // Ambil nama lengkap dari tabel profiles. Jika kosong, gunakan nama depan email
+        const namaLengkap = profile?.nama_lengkap;
+        const namaEmail = email ? email.split('@')[0] : 'Pengguna';
+
+        elName.innerText = namaLengkap || namaEmail;
+    }
+
+    if (elRole) {
+        // Tampilkan jabatan/peran resmi
+        const role = profile?.role || 'guru';
+        elRole.innerText = (role === 'admin') ? 'ADMINISTRATOR' : 'GURU PENCATAT';
+    }
+}
+
+// --- RENDER ANTARMUKA (TRANSISI BERHASIL MASUK) ---
 function renderUserInterface() {
     const loginView = document.getElementById("login-view");
     const appView = document.getElementById("app-view");
@@ -114,23 +140,25 @@ function renderUserInterface() {
     appView.classList.remove("hidden");
     appView.classList.add("page-fade-in");
 
-    document.getElementById("user-name").innerText = currentProfile.nama_lengkap || currentUser.email;
-    document.getElementById("user-role").innerText = currentProfile.role.toUpperCase();
+    // Perbarui header profil (nama lengkap & jabatan)
+    updateUserHeaderProfile(currentProfile, currentUser?.email);
 
     applyRoleRestrictions(currentProfile.role);
-    
+
     if (typeof switchPage === 'function') {
         switchPage('dashboard');
     }
 
-    // Tampilkan Animasi Notifikasi Berhasil Masuk
-    showToast(`Berhasil masuk! Selamat datang, ${currentProfile.nama_lengkap || 'Pengguna'}.`, 'success');
+    // Tampilkan Notifikasi Berhasil Masuk
+    const namaTampil = currentProfile.nama_lengkap
+        || (currentUser?.email ? currentUser.email.split('@')[0] : 'Pengguna');
+    showToast(`Berhasil masuk! Selamat datang, ${namaTampil}.`, 'success');
 }
 
 // Membatasi Navigasi Sesuai Hak Akses Pengguna
 function applyRoleRestrictions(role) {
     const adminElements = document.querySelectorAll('[data-role="admin"]');
-    
+
     adminElements.forEach(el => {
         if (role === 'admin') {
             el.classList.remove('hidden');
@@ -140,9 +168,8 @@ function applyRoleRestrictions(role) {
     });
 }
 
-/// --- LOGIKA MODAL KONFIRMASI LOGOUT ---
+// --- LOGIKA MODAL KONFIRMASI LOGOUT ---
 function handleLogout() {
-    // Tampilkan Modal Dialog Konfirmasi
     const modal = document.getElementById("logout-modal");
     if (modal) {
         modal.classList.remove("hidden");
@@ -166,10 +193,13 @@ async function confirmLogout() {
     resetAppState();
     showToast("Anda telah keluar dari aplikasi.", "info");
 }
+
 // Mengembalikan Aplikasi ke Tampilan Login
 function resetAppState() {
     currentUser = null;
     currentProfile = null;
+    window.currentProfile = null;
+    window.currentUserRole = null;
 
     const loginForm = document.getElementById("login-form");
     if (loginForm) loginForm.reset();
@@ -213,6 +243,7 @@ function getAuthErrorMessage(message) {
     }
     return "Terjadi kesalahan login: " + message;
 }
+
 // --- FUNGSI PEMBANTU NOTIFIKASI TOAST ---
 function showToast(message, type = 'success', duration = 3000) {
     const container = document.getElementById('toast-container');
