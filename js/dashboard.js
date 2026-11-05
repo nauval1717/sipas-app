@@ -1,5 +1,7 @@
 let dashboardChartInstance = null;
 let cacheMasterKelasDashboard = [];
+let dashboardRealtimeChannel = null;   // [BARU]
+let dashboardRealtimeTimer = null;     // [BARU]
 
 document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('page-dashboard')) {
@@ -10,7 +12,41 @@ document.addEventListener('DOMContentLoaded', () => {
 async function initDashboard() {
     if (!window.db) return;
     await populateDashboardFilters();
+    bindDashboardDateFilters();        // [BARU]
     await loadDashboardData();
+    startDashboardRealtime();          // [BARU]
+}
+
+// ----------------------------------------------------
+// [BARU] FILTER TANGGAL: otomatis muat ulang saat tanggal diganti
+// ----------------------------------------------------
+function bindDashboardDateFilters() {
+    ['dash-date-start', 'dash-date-end'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el && !el.dataset.bound) {
+            el.addEventListener('change', () => loadDashboardData());
+            el.dataset.bound = '1';
+        }
+    });
+}
+
+// ----------------------------------------------------
+// [BARU] REALTIME LISTENER: refresh dashboard saat guru lain input data
+// ----------------------------------------------------
+function startDashboardRealtime() {
+    if (!window.db || dashboardRealtimeChannel) return; // cegah subscribe ganda
+
+    dashboardRealtimeChannel = window.db
+        .channel('realtime-penilaian-sikap')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'penilaian_sikap' }, (payload) => {
+            console.log('Ada pembaruan data penilaian!', payload);
+            // Debounce: banyak perubahan beruntun cukup 1x refresh
+            clearTimeout(dashboardRealtimeTimer);
+            dashboardRealtimeTimer = setTimeout(() => {
+                if (document.getElementById('page-dashboard')) loadDashboardData();
+            }, 500);
+        })
+        .subscribe();
 }
 
 // ----------------------------------------------------
@@ -23,9 +59,11 @@ async function populateDashboardFilters() {
     try {
         const { data: taData } = await window.db.from('tahun_ajaran').select('id, tahun').order('tahun', { ascending: false });
         if (taData && taData.length > 0) {
+            const currentVal = selectTA.value; // [DIUBAH] pilihan tidak hilang saat dipanggil ulang
             const taUnique = Array.from(new Set(taData.map(t => t.tahun)));
             selectTA.innerHTML = `<option value="">-- Semua Tahun Ajaran --</option>` +
                 taUnique.map(t => `<option value="${t}">${t}</option>`).join('');
+            selectTA.value = currentVal;
         }
     } catch (err) {
         console.error("Gagal memuat filter dashboard:", err);
@@ -40,6 +78,8 @@ async function loadDashboardData() {
 
     const filterTA = document.getElementById('dash-filter-ta')?.value || '';
     const filterSem = document.getElementById('dash-filter-semester')?.value || '';
+    const filterTglMulai = document.getElementById('dash-date-start')?.value || '';   // [BARU]
+    const filterTglSampai = document.getElementById('dash-date-end')?.value || '';    // [BARU]
     const userRole = window.currentUserRole || 'admin';
 
     // Sesuaikan Label Peran
@@ -65,7 +105,7 @@ async function loadDashboardData() {
         cacheMasterKelasDashboard = resMasterKelas.data || [];
 
         // B. Query Transaksi Penilaian Sikap (Tanpa Embed kelas_id yang Rentan Error)
-        const { data: records, error } = await window.db
+        let query = window.db                                                          // [DIUBAH] dari const { data, error } = await ...
             .from('penilaian_sikap')
             .select(`
                 id,
@@ -80,8 +120,13 @@ async function loadDashboardData() {
                 tahun_ajaran:tahun_ajaran_id (tahun, semester),
                 master_perilaku:perilaku_id (id, nama_perilaku, jenis),
                 pencatat:pencatat_id (nama_lengkap)
-            `)
-            .order('created_at', { ascending: false });
+            `);
+
+        // [BARU] Filter rentang tanggal di sisi server
+        if (filterTglMulai) query = query.gte('tanggal', filterTglMulai);
+        if (filterTglSampai) query = query.lte('tanggal', filterTglSampai);
+
+        const { data: records, error } = await query.order('created_at', { ascending: false }); // [DIUBAH]
 
         if (error) throw error;
 
