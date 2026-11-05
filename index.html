@@ -1161,24 +1161,46 @@
             </form>
         </div>
     </div>
-    <!-- MODAL TAMBAH KATEGORI KARAKTER -->
+
+<!-- MODAL KELOLA KATEGORI KARAKTER -->
 <div id="modal-kategori-karakter" class="modal-overlay hidden">
-    <div class="modal-box">
+    <div class="modal-box" style="max-width: 550px;">
         <div class="modal-header">
-            <h3>Tambah Kategori Karakter</h3>
+            <h3>Kelola Kategori Karakter</h3>
         </div>
-        <form onsubmit="saveKategoriKarakter(event)">
-            <div class="modal-body">
+        <div class="modal-body">
+            <!-- Form Tambah Kategori Baru -->
+            <form onsubmit="saveKategoriKarakter(event)">
                 <div class="form-group">
-                    <label>Nama Kategori</label>
-                    <input type="text" id="kategori-nama" class="form-input" placeholder="Contoh: Kedisiplinan" required>
+                    <label>Nama Kategori Baru</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="kategori-nama" class="form-input" placeholder="Contoh: Kedisiplinan" required>
+                        <button type="submit" class="btn btn-primary" style="white-space: nowrap;">+ Tambah</button>
+                    </div>
                 </div>
+            </form>
+
+            <hr style="margin: 16px 0; border: 0; border-top: 1px solid #e2e8f0;">
+
+            <!-- Tabel Daftar Kategori Terpasang -->
+            <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 8px;">Daftar Kategori Terdaftar</h4>
+            <div class="table-responsive" style="max-height: 220px; overflow-y: auto;">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Nama Kategori</th>
+                            <th style="width: 80px; text-align: center;">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-kategori-list">
+                        <tr><td colspan="2" class="text-center text-muted">Memuat data kategori...</td></tr>
+                    </tbody>
+                </table>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeModal('modal-kategori-karakter')">Batal</button>
-                <button type="submit" class="btn btn-primary">Simpan Kategori</button>
-            </div>
-        </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('modal-kategori-karakter')">Tutup</button>
+        </div>
     </div>
 </div>
 
