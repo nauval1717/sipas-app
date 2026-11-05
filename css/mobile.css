@@ -4,15 +4,19 @@
 @media (max-width: 768px) {
     /* --- NAVIGASI & SIDEBAR --- */
     /* --- SIDEBAR HP (SCROLLABLE & FULL HEIGHT) --- */
+    /* Dikunci tepat di viewport HP, tidak peduli seberapa jauh halaman di-scroll */
     .sidebar {
         position: fixed !important;
         top: 0 !important;
-        width: 260px !important;
+        bottom: 0 !important;
+        width: 270px !important;
         height: 100vh !important;
+        height: 100dvh !important; /* Tinggi presisi seukuran layar HP */
         max-height: 100vh !important;
+        max-height: 100dvh !important;
         overflow-y: auto !important; /* Bisa di-scroll jika layar pendek */
         -webkit-overflow-scrolling: touch;
-        z-index: 1000 !important;
+        z-index: 9999 !important; /* Selalu di atas semua elemen halaman */
         transform: translateX(-100%); /* Sembunyi secara default */
         transition: transform 0.3s ease;
     }
@@ -22,6 +26,7 @@
     .sidebar.active,
     .sidebar.show {
         transform: translateX(0) !important;
+        box-shadow: 4px 0 16px rgba(0, 0, 0, 0.2);
     }
 
     .btn-close-sidebar {
@@ -36,15 +41,24 @@
         display: block;
     }
 
-    .sidebar-overlay {
+    /* Lapisan Gelap (Overlay) di Belakang Sidebar */
+    .sidebar-overlay,
+    .mobile-overlay {
         display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.4);
-        z-index: 90;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        background: rgba(0, 0, 0, 0.5) !important;
+        z-index: 9998 !important;
     }
 
-    .sidebar-overlay.active {
+    .sidebar-overlay.active,
+    .mobile-overlay.active {
         display: block;
     }
 
@@ -246,6 +260,66 @@
     .btn-submit-container .btn {
         flex: 1 !important;
         margin: 0 !important;
+    }
+
+    /* ==========================================
+       POIN 5: AREA SENTUH JEMPOL (TOUCH TARGETS)
+       ========================================== */
+    /* Tombol & Input Memiliki Tinggi Minimal 46px */
+    button,
+    .btn,
+    .form-input,
+    select,
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    input[type="email"],
+    input[type="password"] {
+        min-height: 46px !important;
+        font-size: 14px !important;
+        border-radius: 8px !important;
+    }
+
+    /* Area Sentuh Tombol Garis 3 (Hamburger) */
+    .btn-hamburger,
+    .menu-toggle,
+    .sidebar-toggle,
+    .topbar-toggle {
+        min-width: 44px !important;
+        min-height: 44px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 22px !important;
+        padding: 8px !important;
+    }
+
+    /* Tombol Aksi di Kartu Data */
+    .table-responsive .btn,
+    .table .btn {
+        min-height: 38px !important;
+        padding: 6px 12px !important;
+        font-size: 13px !important;
+    }
+
+    /* Checkbox & Radio Button Dibuat Lebih Besar */
+    input[type="checkbox"],
+    input[type="radio"] {
+        width: 22px !important;
+        height: 22px !important;
+        margin-right: 8px !important;
+        cursor: pointer;
+    }
+
+    /* Jarak Antar Item Menu Sidebar Agar Bebas Salah Tekan */
+    .sidebar-menu li a,
+    .sidebar-nav a,
+    .sidebar a {
+        padding: 14px 16px !important;
+        min-height: 48px !important;
+        display: flex !important;
+        align-items: center !important;
+        font-size: 14px !important;
     }
 }
 
