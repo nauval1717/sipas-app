@@ -53,16 +53,21 @@ function switchPage(pageId, event) {
     document.querySelectorAll('.menu-item').forEach(item => {
         item.classList.remove('active');
     });
-    if (event && event.currentTarget) {
+    if (event && event.currentTarget && event.currentTarget.classList.contains('menu-item')) {
         event.currentTarget.classList.add('active');
     }
+
+    // Perbarui tab aktif di Mobile Tab Bar (indikator garis biru)
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.page === pageId);
+    });
 
     // Tutup sidebar jika dibuka pada layar ponsel
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('sidebar-overlay');
     if (sidebar && sidebar.classList.contains('open')) {
         sidebar.classList.remove('open');
-        overlay.classList.remove('active');
+        if (overlay) overlay.classList.remove('active');
     }
 }
 
