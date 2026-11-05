@@ -185,3 +185,56 @@
         width: 100%;
     }
 }
+
+/* =========================================================
+   FIX OVERLOAD INPUT FORM & SCROLL KOTAK DASHBOARD HP
+   ========================================================= */
+@media (max-width: 768px) {
+
+    /* 1. CEGAH FORM INPUT & SELECT MELUAP (OVERLOAD) */
+    .form-group, 
+    .form-input, 
+    select, 
+    textarea, 
+    input[type="text"], 
+    input[type="date"], 
+    input[type="email"], 
+    input[type="password"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    /* 2. OPTIMASI KOTAK LAYOUT DASHBOARD HP */
+    .form-grid {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 14px !important;
+    }
+
+    .card {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important; /* Mencegah kartu melebar melebihi layar */
+    }
+
+    /* 3. AKTIFKAN SCROLL JARI UNTUK REKAP KELAS & PENILAIAN TERBARU */
+    .table-responsive {
+        display: block !important;
+        width: 100% !important;
+        max-height: 280px !important; /* Batas tinggi kotak */
+        overflow-y: auto !important;  /* Scroll Ke Atas-Bawah */
+        overflow-x: auto !important;  /* Scroll Ke Kiri-Kanan jika teks panjang */
+        -webkit-overflow-scrolling: touch !important; /* Scroll halus jempol di HP */
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+    }
+
+    /* Ukuran Teks Tabel HP Agar Pas */
+    .table th, .table td {
+        padding: 8px 10px !important;
+        font-size: 12px !important;
+        white-space: nowrap; /* Mencegah teks berantakan */
+    }
+}
