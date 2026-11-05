@@ -80,9 +80,36 @@
     small { font-size: 0.75rem !important; }
 
     /* --- LAYOUT GRID & KARTU --- */
+    /* ==========================================
+       POIN 4: KARTU STATISTIK GESER MENYAMPING (HP)
+       ========================================== */
+    /* Wadah Utama Kartu Statistik */
+    .stats-container,
+    .dashboard-stats-grid,
     .stats-grid {
-        grid-template-columns: repeat(2, 1fr) !important;
-        gap: 10px !important;
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        gap: 12px !important;
+        padding-bottom: 10px !important;
+        margin-bottom: 16px !important;
+    }
+
+    /* Indikator Scrollbar Halus */
+    .stats-container::-webkit-scrollbar,
+    .dashboard-stats-grid::-webkit-scrollbar,
+    .stats-grid::-webkit-scrollbar {
+        height: 4px;
+    }
+
+    .stats-container::-webkit-scrollbar-thumb,
+    .dashboard-stats-grid::-webkit-scrollbar-thumb,
+    .stats-grid::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
     }
 
     .form-grid {
@@ -96,9 +123,16 @@
         border-radius: 8px !important;
     }
 
+    /* Setiap Kartu Statistik Individual */
     .stat-card {
-        padding: 12px !important;
+        flex: 0 0 150px !important;
+        min-width: 150px !important;
+        scroll-snap-align: start;
+        margin-bottom: 0 !important;
+        padding: 14px 12px !important;
         gap: 10px !important;
+        border-radius: 12px !important;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
     }
 
     .stat-icon {
@@ -219,10 +253,6 @@
 /* PENYESUAIAN LAYAR HP KECIL (max-width: 480px)        */
 /* ==================================================== */
 @media (max-width: 480px) {
-    .stats-grid {
-        grid-template-columns: 1fr !important;
-    }
-
     .flex-between {
         flex-direction: column;
         align-items: flex-start !important;
