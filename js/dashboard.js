@@ -76,7 +76,7 @@ async function loadDashboardData() {
                 siswa_id,
                 kelas_id,
                 siswa:siswa_id (nama_lengkap),
-                kelas:kelas_id (nama_kelas),
+                kelas:kelas_id!fk_penilaian_sikap_kelas (id, nama_kelas),
                 tahun_ajaran:tahun_ajaran_id (tahun, semester),
                 master_perilaku:perilaku_id (id, nama_perilaku, jenis),
                 pencatat:pencatat_id (nama_lengkap)
