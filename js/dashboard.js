@@ -64,7 +64,7 @@ async function loadDashboardData() {
         document.getElementById('stat-guru').innerText = resGuru.count || 0;
         cacheMasterKelasDashboard = resMasterKelas.data || [];
 
-        // B. Query Transaksi Penilaian Sikap
+        // B. Query Transaksi Penilaian Sikap (Tanpa Embed kelas_id yang Rentan Error)
         const { data: records, error } = await window.db
             .from('penilaian_sikap')
             .select(`
@@ -75,8 +75,8 @@ async function loadDashboardData() {
                 created_at,
                 siswa_id,
                 kelas_id,
+                tahun_ajaran_id,
                 siswa:siswa_id (nama_lengkap),
-                kelas:kelas_id!fk_penilaian_sikap_kelas (id, nama_kelas),
                 tahun_ajaran:tahun_ajaran_id (tahun, semester),
                 master_perilaku:perilaku_id (id, nama_perilaku, jenis),
                 pencatat:pencatat_id (nama_lengkap)
@@ -85,8 +85,15 @@ async function loadDashboardData() {
 
         if (error) throw error;
 
+        // Gabungkan nama kelas secara otomatis dari data master kelas
+        const mapKelas = new Map(cacheMasterKelasDashboard.map(k => [k.id, k]));
+        const processedRecords = (records || []).map(r => ({
+            ...r,
+            kelas: mapKelas.get(r.kelas_id) || { nama_kelas: '-' }
+        }));
+
         // Penyaringan berdasarkan Filter Tahun Ajaran & Semester
-        const filtered = (records || []).filter(r => {
+        const filtered = processedRecords.filter(r => {
             if (filterTA && r.tahun_ajaran?.tahun !== filterTA) return false;
             if (filterSem && r.tahun_ajaran?.semester !== filterSem) return false;
             return true;
@@ -99,7 +106,7 @@ async function loadDashboardData() {
         document.getElementById('stat-positif').innerText = totalPositif;
         document.getElementById('stat-negatif').innerText = totalNegatif;
 
-        // Render Seluruh Komponen Dashboard
+        // Render Komponen Dashboard
         renderDashboardChart(totalPositif, totalNegatif);
         renderTopPerilaku(filtered);
         renderRekapKelasDashboard(filtered);
