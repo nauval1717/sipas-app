@@ -152,6 +152,7 @@ async function saveGuru(e) {
         if (window.showToast) showToast("Gagal menyimpan guru: " + err.message, "error");
     }
 }
+
 // ==========================================
 // 2. DATA KARAKTER & PERILAKU
 // ==========================================
@@ -173,45 +174,87 @@ async function loadKategoriKarakter() {
     }
 }
 
+// ==========================================
+// MEMUAT & MENAMPILKAN DATA KARAKTER & PERILAKU
+// ==========================================
 async function loadKarakter() {
     if (!window.db) return;
     try {
         const { data, error } = await window.db
             .from('master_perilaku')
-            .select('id, nama_perilaku, jenis, kategori_id, kategori_karakter(nama_kategori)');
+            .select(`
+                id,
+                nama_perilaku,
+                jenis,
+                kategori_id,
+                kategori_karakter:kategori_id (nama_kategori)
+            `)
+            .order('nama_perilaku');
 
         if (error) throw error;
+
+        // Simpan ke cache (dipakai oleh openModalKarakter untuk mode edit)
         cachePerilaku = data || [];
-        renderTableKarakter();
+
+        const tbody = document.getElementById('table-karakter');
+        if (!tbody) return;
+
+        if (!data || data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">Belum ada data perilaku.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = data.map(p => {
+            const jenisBadge = p.jenis === 'positif' 
+                ? '<span class="badge bg-green">👍 POSITIF</span>' 
+                : '<span class="badge bg-red">👎 NEGATIF</span>';
+            
+            const namaClean = (p.nama_perilaku || '').replace(/'/g, "\\'");
+
+            return `
+                <tr>
+                    <td>${p.kategori_karakter?.nama_kategori || '-'}</td>
+                    <td><strong>${p.nama_perilaku}</strong></td>
+                    <td>${jenisBadge}</td>
+                    <td>
+                        <button class="btn btn-secondary" style="padding: 3px 8px; font-size: 11px;" onclick="openModalKarakter('${p.id}')">
+                            ✏️ Edit
+                        </button>
+                        <button class="btn btn-danger" style="padding: 3px 8px; font-size: 11px;" onclick="deletePerilaku('${p.id}', '${namaClean}')">
+                            🗑️ Hapus
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
     } catch (err) {
-        if (window.showToast) showToast("Gagal memuat data perilaku: " + err.message, "error");
+        console.error("Gagal memuat data karakter:", err);
+        const tbody = document.getElementById('table-karakter');
+        if (tbody) tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">Gagal memuat data: ${err.message}</td></tr>`;
     }
 }
 
-function renderTableKarakter() {
-    const tbody = document.getElementById('table-karakter');
-    if (!tbody) return;
+// ==========================================
+// FUNGSI HAPUS PERILAKU SIKAP
+// ==========================================
+async function deletePerilaku(id, nama) {
+    if (!confirm(`Apakah Anda yakin ingin menghapus perilaku "${nama}"?`)) return;
 
-    if (cachePerilaku.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">Belum ada data perilaku.</td></tr>`;
-        return;
+    try {
+        const { error } = await window.db.from('master_perilaku').delete().eq('id', id);
+        if (error) throw error;
+
+        if (window.showToast) showToast(`Perilaku "${nama}" berhasil dihapus.`, "success");
+        await loadKarakter();
+    } catch (err) {
+        if (window.showToast) showToast("Gagal menghapus perilaku: " + err.message, "error");
     }
-
-    tbody.innerHTML = cachePerilaku.map(p => `
-        <tr>
-            <td>${p.kategori_karakter?.nama_kategori || '-'}</td>
-            <td><strong>${p.nama_perilaku}</strong></td>
-            <td>
-                <span class="badge ${p.jenis === 'positif' ? 'text-success' : 'text-danger'}">
-                    ${p.jenis.toUpperCase()}
-                </span>
-            </td>
-            <td>
-                <button class="btn btn-secondary" style="padding: 4px 8px;" onclick="openModalKarakter('${p.id}')">Edit</button>
-            </td>
-        </tr>
-    `).join('');
 }
+
+// Daftarkan ke Global Window Scope
+window.loadKarakter = loadKarakter;
+window.deletePerilaku = deletePerilaku;
 
 function openModalKarakter(perilakuId = null) {
     const modal = document.getElementById('modal-karakter');
@@ -900,6 +943,7 @@ window.openModalImportSiswa = openModalImportSiswa;
 window.processExcelFile = processExcelFile;
 window.commitImportSiswa = commitImportSiswa;
 window.closeModal = closeModal;
+
 // --- SINKRONISASI DASHBOARD UTAMA ---
 async function loadDashboardStats() {
     if (!window.db) return;
@@ -925,45 +969,13 @@ initDataMaster = async function() {
     await loadDashboardStats();
 };
 
-// --- UNDUH TEMPLATE EXCEL ---
+// --- UNDUH TEMPLATE EXCEL SISWA ---
 function downloadTemplateSiswa() {
     const data = [{ "NIS": "1001", "NISN": "0012345678", "Nama Lengkap": "Budi Santoso", "Kelas": "VII A" }];
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Template_Siswa");
     XLSX.writeFile(wb, "Template_Data_Siswa.xlsx");
-}
-
-function downloadTemplateGuru() {
-    const data = [{ "NIP": "198501012010011001", "Nama Lengkap": "Ahmad Fauzi, S.Pd", "No HP": "081234567890" }];
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Template_Guru");
-    XLSX.writeFile(wb, "Template_Data_Guru.xlsx");
-}
-
-// --- HAPUS GURU DAN PROFIL TERIKAT ---
-async function deleteGuru(guruId, nama) {
-    if (!confirm(`Apakah Anda yakin ingin menghapus data guru ${nama}?`)) return;
-
-    try {
-        const g = cacheGuru.find(item => item.id === guruId);
-        const profileId = g ? g.profile_id : null;
-
-        // 1. Hapus dari tabel guru
-        const { error: errGuru } = await window.db.from('guru').delete().eq('id', guruId);
-        if (errGuru) throw errGuru;
-
-        // 2. Bersihkan profil terikat di tabel profiles jika ada
-        if (profileId) {
-            await window.db.from('profiles').delete().eq('id', profileId);
-        }
-
-        if (window.showToast) showToast("Data guru berhasil dihapus bersih.", "success");
-        await loadGuru();
-    } catch (err) {
-        if (window.showToast) showToast("Gagal menghapus guru: " + err.message, "error");
-    }
 }
 
 // --- KATEGORI KARAKTER DINAMIS ---
@@ -989,8 +1001,6 @@ async function saveKategoriKarakter(e) {
 
 // Export fungsi ke window
 window.downloadTemplateSiswa = downloadTemplateSiswa;
-window.downloadTemplateGuru = downloadTemplateGuru;
-window.deleteGuru = deleteGuru;
 window.openModalKategoriKarakter = openModalKategoriKarakter;
 window.saveKategoriKarakter = saveKategoriKarakter;
 
@@ -1044,7 +1054,7 @@ async function deleteGuru(guruId, nama) {
 window.deleteGuru = deleteGuru;
 
 // ==========================================
-// 1. FITUR IMPOR GURU VIA EXCEL
+// FITUR IMPOR GURU VIA EXCEL
 // ==========================================
 function openModalImportGuru() {
     const modal = document.getElementById('modal-import-guru');
@@ -1143,22 +1153,8 @@ async function processExcelGuru(event) {
 }
 
 // ==========================================
-// 2. FITUR HAPUS KATEGORI & PERILAKU KARAKTER
+// FITUR HAPUS KATEGORI KARAKTER
 // ==========================================
-async function deletePerilaku(id, nama) {
-    if (!confirm(`Apakah Anda yakin ingin menghapus perilaku "${nama}"?`)) return;
-
-    try {
-        const { error } = await window.db.from('master_perilaku').delete().eq('id', id);
-        if (error) throw error;
-
-        if (window.showToast) showToast(`Perilaku "${nama}" berhasil dihapus.`, "success");
-        if (window.loadKarakter) await window.loadKarakter();
-    } catch (err) {
-        if (window.showToast) showToast("Gagal menghapus perilaku: " + err.message, "error");
-    }
-}
-
 async function deleteKategoriKarakter(id, nama) {
     if (!confirm(`Apakah Anda yakin ingin menghapus kategori "${nama}"?\n\nSemua perilaku di bawah kategori ini juga akan terhapus!`)) return;
 
@@ -1167,7 +1163,8 @@ async function deleteKategoriKarakter(id, nama) {
         if (error) throw error;
 
         if (window.showToast) showToast(`Kategori "${nama}" berhasil dihapus.`, "success");
-        if (window.loadKarakter) await window.loadKarakter();
+        await loadKategoriKarakter();
+        await loadKarakter();
     } catch (err) {
         if (window.showToast) showToast("Gagal menghapus kategori: " + err.message, "error");
     }
@@ -1176,7 +1173,6 @@ async function deleteKategoriKarakter(id, nama) {
 // Global Export
 window.downloadTemplateGuru = downloadTemplateGuru;
 window.processExcelGuru = processExcelGuru;
-window.deletePerilaku = deletePerilaku;
 window.deleteKategoriKarakter = deleteKategoriKarakter;
 window.loadKelas = loadKelas;
 window.openModalImportGuru = openModalImportGuru;
