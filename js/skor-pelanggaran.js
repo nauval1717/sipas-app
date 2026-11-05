@@ -271,3 +271,5 @@ window.filterSkorSiswa = filterSkorSiswa;
 window.filterPelanggaran = filterPelanggaran;
 window.openDetailSkorSiswa = openDetailSkorSiswa;
 window.initSkorDanPelanggaran = initSkorDanPelanggaran;
+window.loadPelanggaran = loadPelanggaran;
+window.loadSkorSiswa = loadSkorSiswa;
