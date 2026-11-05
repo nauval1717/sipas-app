@@ -63,6 +63,7 @@ function renderTableGuru() {
             <td><span class="badge text-success">Aktif</span></td>
             <td>
                 <button class="btn btn-secondary" style="padding: 4px 8px;" onclick="openModalGuru('${g.id}')">Edit</button>
+                <button class="btn btn-danger" style="padding: 4px 8px;" onclick="deleteGuru('${g.id}', '${(g.profiles?.nama_lengkap || 'Guru').replace(/'/g, "\\'")}')">Hapus</button>
             </td>
         </tr>
     `).join('');
@@ -993,3 +994,32 @@ async function deleteSiswa(siswaId, nama) {
 
 // Daftarkan fungsi ke scope global window
 window.deleteSiswa = deleteSiswa;
+
+// --- FUNGSI HAPUS GURU ---
+async function deleteGuru(guruId, nama) {
+    if (!confirm(`Apakah Anda yakin ingin menghapus data guru "${nama}"?`)) {
+        return;
+    }
+
+    try {
+        const g = cacheGuru.find(item => item.id === guruId);
+        const profileId = g ? g.profile_id : null;
+
+        // 1. Hapus dari tabel guru
+        const { error: errGuru } = await window.db.from('guru').delete().eq('id', guruId);
+        if (errGuru) throw errGuru;
+
+        // 2. Bersihkan akun profil terikat di tabel profiles jika ada
+        if (profileId) {
+            await window.db.from('profiles').delete().eq('id', profileId);
+        }
+
+        if (window.showToast) showToast(`Data guru ${nama} berhasil dihapus.`, "success");
+        await loadGuru();
+    } catch (err) {
+        if (window.showToast) showToast("Gagal menghapus guru: " + err.message, "error");
+    }
+}
+
+// Daftarkan fungsi ke scope global window
+window.deleteGuru = deleteGuru;
