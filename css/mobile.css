@@ -1,421 +1,187 @@
-/* ==========================================
-   STABILISASI & OPTIMASI UX HP (SIPAS)
-   ========================================== */
+/* =========================================================
+   SIPAS - RESPONSIVE MOBILE CSS (WEB-LIKE STANDARD)
+   ========================================================= */
 
+/* 1. STYLING OVERLAY REDUP SAAT SIDEBAR TERBUKA */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(2px);
+    z-index: 990;
+}
+
+.sidebar-overlay.active {
+    display: block;
+}
+
+/* =========================================================
+   MEDIA QUERY UNTUK TAMPILAN HP (<= 768px)
+   ========================================================= */
 @media (max-width: 768px) {
-    /* 1. TOPBAR STICKY MEMUAT DI ATAS LAYAR */
-    .topbar {
-        position: sticky !important;
-        top: 0 !important;
-        z-index: 1000 !important;
-        background: #ffffff !important;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+    /* --- A. RESET LAYOUT UTAMA (MENCEGAH MENJOROK KE KANAN) --- */
+    body {
+        overflow-x: hidden;
     }
 
-    /* 2. PERBAIKAN SIDEBAR HP (SEMUA VARIABEL JS) */
+    .app-wrapper {
+        display: block !important;
+        width: 100% !important;
+        overflow-x: hidden;
+    }
 
-    /* WADAH SIDEBAR */
+    .main-content {
+        margin-left: 0 !important; /* Reset margin 250px desktop */
+        width: 100% !important;
+        max-width: 100vw !important;
+        min-height: 100vh;
+        box-sizing: border-box;
+    }
+
+    .content-body {
+        padding: 14px !important;
+    }
+
+    /* --- B. TOPBAR & TOMBOL HAMBURGER --- */
+    .topbar {
+        padding: 0 14px !important;
+        position: sticky;
+        top: 0;
+        z-index: 500;
+        background-color: var(--bg-card);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .btn-hamburger {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
+        height: 38px;
+        background: var(--bg-main);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        font-size: 18px;
+        color: var(--text-main);
+    }
+
+    .topbar-left h1 {
+        font-size: 16px !important;
+    }
+
+    .user-info {
+        align-items: flex-end;
+    }
+
+    .user-name {
+        font-size: 12px !important;
+        max-width: 120px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .user-role {
+        font-size: 10px !important;
+    }
+
+    /* --- C. SIDEBAR DRAWERY (SLIDE MULUS DARI KIRI) --- */
     .sidebar {
         position: fixed !important;
-        top: 0 !important;
-        left: -280px !important;
+        top: 0;
+        bottom: 0;
+        left: 0;
         width: 260px !important;
-        height: 100vh !important;
-        height: 100dvh !important;
-        z-index: 9999 !important;
-        display: block !important; /* Mencegah tersembunyi via display:none */
-        overflow-y: auto !important;
-        -webkit-overflow-scrolling: touch;
-        transition: left 0.3s ease !important;
-        box-shadow: 4px 0 16px rgba(0, 0, 0, 0.2);
+        z-index: 1000 !important;
+        transform: translateX(-100%); /* Sembunyi rapi di luar layar kiri */
+        transition: transform 0.25s ease-in-out !important;
+        box-shadow: 4px 0 15px rgba(0, 0, 0, 0.15);
     }
 
-    /* MUNCULKAN SIDEBAR SAAT KELAS JS AKTIF */
-    .sidebar.active,
-    .sidebar.show,
-    .sidebar.open,
-    .sidebar.visible,
-    body.sidebar-open .sidebar,
-    body.sidebar-active .sidebar,
-    body.show-sidebar .sidebar {
-        left: 0 !important;
+    /* Saat fungsi toggleSidebar() mengaktifkan kelas .open */
+    .sidebar.open {
+        transform: translateX(0) !important;
     }
 
-    /* PASTIKAN TOMBOL GARIS 3 SELALU BISA DIKLIK */
-    .btn-hamburger,
-    .menu-toggle,
-    .sidebar-toggle,
-    #sidebarToggle,
-    #menu-btn {
-        z-index: 1001 !important;
-        cursor: pointer !important;
-        position: relative !important;
+    /* Munculkan tombol silang (x) di dalam header sidebar HP */
+    .btn-close-sidebar {
+        display: block !important;
     }
 
-    /* Overlay Redup Saat Sidebar Terbuka */
-    .sidebar-overlay,
-    .mobile-overlay {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100vw !important;
-        height: 100dvh !important;
-        background: rgba(0, 0, 0, 0.4) !important;
-        z-index: 9998 !important;
+    /* --- D. RESPONSIVITAS KARTU & GRID CONTENT --- */
+    .card {
+        padding: 14px !important;
+        margin-bottom: 14px;
     }
 
-    /* 3. CARD VIEW: UBAH TABEL MENJADI KARTU VERTIKAL */
-    .table-responsive table.table thead {
-        display: none !important;
+    .card-header.flex-between {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
     }
 
-    .table-responsive table.table, 
-    .table-responsive table.table tbody {
-        display: block;
+    .card-header .action-buttons,
+    .card-header .btn {
         width: 100%;
-    }
-
-    .table-responsive table.table tbody tr {
-        display: block;
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 10px;
-        padding: 12px;
-        margin-bottom: 12px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
-    }
-
-    .table-responsive table.table tbody td {
         display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 8px 0;
-        border-bottom: 1px dashed #edf2f7;
-        font-size: 13px;
-        text-align: right;
+        gap: 8px;
     }
 
-    .table-responsive table.table tbody td:last-child {
-        border-bottom: none;
-        padding-top: 10px;
-        justify-content: flex-end;
-        gap: 6px;
+    .card-header .btn {
+        flex: 1;
+        justify-content: center;
     }
 
-    /* 4. STATISTIK GESER MENYAMPING (HORIZONTAL SWIPE) */
-    .stats-container,
-    .dashboard-stats-grid,
+    .form-grid {
+        grid-template-columns: 1fr !important; /* Ubah grid form 2 kolom jadi 1 kolom di HP */
+        gap: 12px;
+    }
+
     .stats-grid {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        overflow-x: auto !important;
-        scroll-snap-type: x mandatory;
-        -webkit-overflow-scrolling: touch;
-        gap: 10px !important;
-        padding-bottom: 8px !important;
-        margin-bottom: 16px !important;
+        grid-template-columns: repeat(2, 1fr) !important; /* 2 Kartu Per Baris di HP */
+        gap: 10px;
     }
 
     .stat-card {
-        flex: 0 0 145px !important;
-        min-width: 145px !important;
-        scroll-snap-align: start;
-        margin-bottom: 0 !important;
-        padding: 12px !important;
+        padding: 12px;
+        gap: 10px;
     }
 
-    /* 5. MODAL FULLSCREEN DI HP */
-    .modal-overlay {
-        padding: 0 !important;
-        align-items: flex-start !important;
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+
+    .stat-value {
+        font-size: 16px;
+    }
+
+    /* --- E. TABEL & MODAL UX HP --- */
+    .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     .modal-box {
-        width: 100vw !important;
-        max-width: 100vw !important;
-        height: 100vh !important;
-        height: 100dvh !important;
-        border-radius: 0 !important;
-        margin: 0 !important;
-        display: flex !important;
-        flex-direction: column !important;
-    }
-
-    .modal-body {
-        flex: 1 !important;
-        overflow-y: auto !important;
+        width: 92% !important;
+        max-width: 100% !important;
         padding: 16px !important;
+        margin: 10px;
     }
 
     .modal-footer {
-        position: sticky;
-        bottom: 0;
-        background: #ffffff;
-        border-top: 1px solid #e2e8f0;
-        padding: 12px 16px;
-        z-index: 10;
+        flex-direction: column-reverse;
+        gap: 8px;
     }
 
-    /* 6. TOMBOL SIMPAN STICKY & PERBESAR SENTUHAN JEMPOL */
-    button, 
-    .btn, 
-    .form-input, 
-    select, 
-    input {
-        min-height: 44px !important;
-        font-size: 14px !important;
-    }
-
-    .form-actions,
-    .action-bar {
-        position: sticky !important;
-        bottom: 0 !important;
-        background: #ffffff !important;
-        padding: 12px !important;
-        border-top: 1px solid #e2e8f0 !important;
-        box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
-        z-index: 80 !important;
-    }
-}
-
-/* ==========================================
-   RESET TOTAL LAYOUT HP (PENUH & TIDAK GESER)
-   ========================================== */
-
-/* Kunci HTML & Body agar tidak ada sisa ruang horizontal */
-html, body {
-    width: 100% !important;
-    max-width: 100vw !important;
-    overflow-x: hidden !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-@media (max-width: 768px) {
-    /* 1. HILANGKAN MARGIN KIRI DESKTOP DI SEMUA KONTAINER */
-    body,
-    main,
-    .wrapper,
-    .main-wrapper,
-    .main-content,
-    #main-content,
-    .content,
-    .content-wrapper {
-        margin-left: 0 !important;
-        padding-left: 12px !important; /* Margin dalam yang aman untuk HP */
-        padding-right: 12px !important;
-        margin-right: 0 !important;
-        width: 100% !important;
-        max-width: 100vw !important;
-        box-sizing: border-box !important;
-        transform: none !important;
-    }
-
-    /* 2. TOPBAR MENEMPEL DI ATAS (FULL WIDTH) */
-    .topbar {
-        position: sticky !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100% !important;
-        margin: 0 0 12px 0 !important;
-        padding: 10px 16px !important;
-        display: flex !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        background: #ffffff !important;
-        z-index: 1000 !important;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
-        box-sizing: border-box !important;
-    }
-
-    /* 3. SIDEBAR DIKELUARKAN DARI ALUR HALAMAN (SLIDE OVERLAY) */
-    .sidebar {
-        position: fixed !important;
-        top: 0 !important;
-        left: -300px !important; /* Tersembunyi sempurna di kiri layar */
-        width: 270px !important;
-        height: 100vh !important;
-        height: 100dvh !important;
-        z-index: 9999 !important;
-        margin: 0 !important;
-        transition: left 0.3s ease-in-out !important;
-        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.25) !important;
-    }
-
-    /* Saat Tombol Garis 3 Diklik -> Sidebar Meluncur Keluar */
-    .sidebar.active,
-    .sidebar.show,
-    .sidebar.open,
-    body.sidebar-open .sidebar {
-        left: 0 !important;
-    }
-}
-
-/* =========================================================
-   PERBAIKAN TOTAL: NETRALKAN GRID DESKTOP & LAYOUT CONDONG
-   ========================================================= */
-
-@media (max-width: 768px) {
-    /* 1. NETRALKAN PEMBUNGKUS UTAMA (HAPUS RUANG 2 KOLOM DESKTOP) */
-    html, body, 
-    #app, 
-    .app-container, 
-    .dashboard-container, 
-    .dashboard-layout, 
-    .layout-wrapper, 
-    .wrapper, 
-    .main-wrapper,
-    .container-fluid {
-        display: block !important;
-        grid-template-columns: none !important; /* Matikan sistem kolom grid */
-        flex-direction: column !important;
-        width: 100% !important;
-        max-width: 100vw !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        overflow-x: hidden !important;
-    }
-
-    /* 2. KELUARKAN SIDEBAR DARI ALUR LAYAR (HANYA MELAYANG SAAT DIKLIK) */
-    .sidebar,
-    aside,
-    #sidebar {
-        position: fixed !important;
-        top: 0 !important;
-        left: -300px !important; /* Tersembunyi total di luar layar kiri */
-        width: 270px !important;
-        height: 100vh !important;
-        height: 100dvh !important;
-        z-index: 99999 !important;
-        margin: 0 !important;
-        transition: left 0.3s ease-in-out !important;
-        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3) !important;
-    }
-
-    /* Saat Tombol Garis 3 Diklik -> Sidebar Meluncur Keluar */
-    .sidebar.active,
-    .sidebar.show,
-    .sidebar.open,
-    body.sidebar-open .sidebar,
-    body.sidebar-active .sidebar {
-        left: 0 !important;
-    }
-
-    /* 3. PAKSA KONTEN UTAMA MEMENUHI 100% LAYAR HP (TANPA KOSONG DI KIRI) */
-    .main-content,
-    .content-wrapper,
-    .main,
-    #main-content,
-    .content,
-    .page-content {
-        width: 100% !important;
-        max-width: 100% !important;
-        margin-left: 0 !important;
-        margin-right: 0 !important;
-        padding: 12px !important;
-        box-sizing: border-box !important;
-        display: block !important;
-    }
-
-    /* 4. TOPBAR (HEADER) FULL WIDTH DI ATAS */
-    .topbar,
-    header,
-    .header {
-        width: 100% !important;
-        margin-left: 0 !important;
-        left: 0 !important;
-        box-sizing: border-box !important;
-        position: sticky !important;
-        top: 0 !important;
-        z-index: 1000 !important;
-        background: #ffffff !important;
-    }
-}
-
-/* =========================================================
-   PERBAIKAN MUTLAK: HILANGKAN RUANG SIDEBAR & PERBAIKI TOPBAR
-   ========================================================= */
-
-@media (max-width: 768px) {
-    /* 1. MATIKAN SISTEM 2 KOLOM PADA PEMBUNGKUS UTAMA */
-    html, body, 
-    #app, .app, 
-    .app-container, .dashboard-container, .dashboard-layout, 
-    .layout-wrapper, .wrapper, .main-wrapper, .container-fluid {
-        display: block !important;
-        grid-template-columns: 1fr !important; /* Hapus grid 2 kolom desktop */
-        flex-direction: column !important;
-        width: 100% !important;
-        max-width: 100vw !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        overflow-x: hidden !important;
-    }
-
-    /* 2. PAKSA KONTEN UTAMA KEMBALI FULL 100% TANPA MARGIN KIRI */
-    .main-content, 
-    .content-wrapper, 
-    .main, 
-    #main-content, 
-    .content, 
-    .page-content {
-        width: 100% !important;
-        max-width: 100% !important;
-        margin-left: 0 !important; /* Hapus dorongan margin kiri 260px */
-        padding-left: 12px !important;
-        padding-right: 12px !important;
-        box-sizing: border-box !important;
-    }
-
-    /* 3. PERBAIKI TOPBAR & MUNCULKAN TOMBOL GARIS 3 */
-    .topbar, header, .header {
-        width: 100% !important;
-        margin-left: 0 !important;
-        left: 0 !important;
-        padding: 10px 14px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: space-between !important;
-        box-sizing: border-box !important;
-        position: sticky !important;
-        top: 0 !important;
-        z-index: 1000 !important;
-        background: #1e293b !important; /* Menyesuaikan mode gelap aplikasi */
-    }
-
-    /* Memastikan Tombol Garis 3 (Hamburger) Selalu Tampil di Kiri Topbar */
-    .btn-hamburger, 
-    .menu-toggle, 
-    .sidebar-toggle, 
-    #sidebarToggle, 
-    .topbar .toggle-btn {
-        display: inline-flex !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        margin-right: 10px !important;
-        font-size: 22px !important;
-        color: #ffffff !important;
-        cursor: pointer !important;
-    }
-
-    /* 4. CABUT SIDEBAR DARI ALUR HALAMAN (ABSOLUT/FIXED MELAYANG) */
-    .sidebar, aside, #sidebar {
-        position: fixed !important;
-        top: 0 !important;
-        left: -300px !important;
-        width: 270px !important;
-        height: 100vh !important;
-        height: 100dvh !important;
-        z-index: 99999 !important;
-        margin: 0 !important;
-        transition: left 0.3s ease-in-out !important;
-    }
-
-    .sidebar.active, 
-    .sidebar.show, 
-    .sidebar.open, 
-    body.sidebar-open .sidebar {
-        left: 0 !important;
+    .modal-footer .btn {
+        width: 100%;
     }
 }
