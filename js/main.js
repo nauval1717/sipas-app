@@ -38,6 +38,11 @@ function switchPage(pageId, event) {
         window.initInputPenilaian();
     }
 
+    // Muat data Karakter & Perilaku saat halaman Data Karakter dibuka
+    if (pageId === 'karakter' && window.loadKarakter) {
+        window.loadKarakter();
+    }
+
     // Perbarui judul halaman di bar topbar
     const titleElement = document.getElementById('page-title');
     if (titleElement && pageTitles[pageId]) {
