@@ -1,103 +1,89 @@
-/* ==================================================== */
-/* PENYESUAIAN KHUSUS LAYAR HP & TABLET (max-width: 768px) */
-/* ==================================================== */
+/* ==========================================
+   STABILISASI & OPTIMASI UX HP (SIPAS)
+   ========================================== */
+
 @media (max-width: 768px) {
-    /* --- NAVIGASI & SIDEBAR --- */
-    /* --- SIDEBAR HP (SCROLLABLE & FULL HEIGHT) --- */
-    /* Dikunci tepat di viewport HP, tidak peduli seberapa jauh halaman di-scroll */
+    /* 1. TOPBAR STICKY MEMUAT DI ATAS LAYAR */
+    .topbar {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 1000 !important;
+        background: #ffffff !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    /* 2. SIDEBAR DIKUNCI PRESISI DI VIEWPORT AKTIF (HP) */
     .sidebar {
         position: fixed !important;
         top: 0 !important;
-        bottom: 0 !important;
-        width: 270px !important;
+        left: -280px !important;
+        width: 260px !important;
         height: 100vh !important;
-        height: 100dvh !important; /* Tinggi presisi seukuran layar HP */
-        max-height: 100vh !important;
-        max-height: 100dvh !important;
-        overflow-y: auto !important; /* Bisa di-scroll jika layar pendek */
+        height: 100dvh !important;
+        z-index: 9999 !important;
+        overflow-y: auto !important;
         -webkit-overflow-scrolling: touch;
-        z-index: 9999 !important; /* Selalu di atas semua elemen halaman */
-        transform: translateX(-100%); /* Sembunyi secara default */
-        transition: transform 0.3s ease;
-    }
-
-    /* Saat sidebar aktif/terbuka */
-    .sidebar.open,
-    .sidebar.active,
-    .sidebar.show {
-        transform: translateX(0) !important;
+        transition: left 0.3s ease !important;
         box-shadow: 4px 0 16px rgba(0, 0, 0, 0.2);
     }
 
-    .btn-close-sidebar {
-        display: block;
+    /* Saat Sidebar Dibuka via Tombol Garis 3 */
+    .sidebar.active,
+    .sidebar.show {
+        left: 0 !important;
     }
 
-    .main-content {
-        margin-left: 0;
-    }
-
-    .btn-hamburger {
-        display: block;
-    }
-
-    /* Lapisan Gelap (Overlay) di Belakang Sidebar */
+    /* Overlay Redup Saat Sidebar Terbuka */
     .sidebar-overlay,
     .mobile-overlay {
-        display: none;
         position: fixed !important;
         top: 0 !important;
         left: 0 !important;
-        right: 0 !important;
-        bottom: 0 !important;
         width: 100vw !important;
-        height: 100vh !important;
         height: 100dvh !important;
-        background: rgba(0, 0, 0, 0.5) !important;
+        background: rgba(0, 0, 0, 0.4) !important;
         z-index: 9998 !important;
     }
 
-    .sidebar-overlay.active,
-    .mobile-overlay.active {
+    /* 3. CARD VIEW: UBAH TABEL MENJADI KARTU VERTIKAL */
+    .table-responsive table.table thead {
+        display: none !important;
+    }
+
+    .table-responsive table.table, 
+    .table-responsive table.table tbody {
         display: block;
+        width: 100%;
     }
 
-    /* --- TOPBAR MENEMPEL DI ATAS (STICKY TOPBAR) --- */
-    .topbar {
-        padding: 0 16px;
-        height: 56px;
-        position: sticky !important;
-        top: 0 !important;
-        z-index: 99 !important;
-        background: #ffffff !important;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
-    }
-
-    /* Penyesuaian nama profil di layar sempit */
-    .topbar .user-info {
-        max-width: 160px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .content-body {
+    .table-responsive table.table tbody tr {
+        display: block;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
         padding: 12px;
+        margin-bottom: 12px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
     }
 
-    /* --- PENYESUAIAN UKURAN TEKS HP (AGAR RAPI & TIDAK KEBESARAN) --- */
-    h1 { font-size: 1.2rem !important; }
-    h2 { font-size: 1.05rem !important; }
-    h3 { font-size: 0.95rem !important; }
-    h4 { font-size: 0.85rem !important; }
-    body, p, label, input, select, textarea { font-size: 0.85rem !important; }
-    small { font-size: 0.75rem !important; }
+    .table-responsive table.table tbody td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px dashed #edf2f7;
+        font-size: 13px;
+        text-align: right;
+    }
 
-    /* --- LAYOUT GRID & KARTU --- */
-    /* ==========================================
-       POIN 4: KARTU STATISTIK GESER MENYAMPING (HP)
-       ========================================== */
-    /* Wadah Utama Kartu Statistik */
+    .table-responsive table.table tbody td:last-child {
+        border-bottom: none;
+        padding-top: 10px;
+        justify-content: flex-end;
+        gap: 6px;
+    }
+
+    /* 4. STATISTIK GESER MENYAMPING (HORIZONTAL SWIPE) */
     .stats-container,
     .dashboard-stats-grid,
     .stats-grid {
@@ -107,370 +93,69 @@
         overflow-x: auto !important;
         scroll-snap-type: x mandatory;
         -webkit-overflow-scrolling: touch;
-        gap: 12px !important;
-        padding-bottom: 10px !important;
+        gap: 10px !important;
+        padding-bottom: 8px !important;
         margin-bottom: 16px !important;
     }
 
-    /* Indikator Scrollbar Halus */
-    .stats-container::-webkit-scrollbar,
-    .dashboard-stats-grid::-webkit-scrollbar,
-    .stats-grid::-webkit-scrollbar {
-        height: 4px;
-    }
-
-    .stats-container::-webkit-scrollbar-thumb,
-    .dashboard-stats-grid::-webkit-scrollbar-thumb,
-    .stats-grid::-webkit-scrollbar-thumb {
-        background: #cbd5e1;
-        border-radius: 4px;
-    }
-
-    .form-grid {
-        grid-template-columns: 1fr !important;
-        gap: 10px !important;
-    }
-
-    .card {
-        padding: 14px !important;
-        margin-bottom: 12px !important;
-        border-radius: 8px !important;
-    }
-
-    /* Setiap Kartu Statistik Individual */
     .stat-card {
-        flex: 0 0 150px !important;
-        min-width: 150px !important;
+        flex: 0 0 145px !important;
+        min-width: 145px !important;
         scroll-snap-align: start;
         margin-bottom: 0 !important;
-        padding: 14px 12px !important;
-        gap: 10px !important;
-        border-radius: 12px !important;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+        padding: 12px !important;
     }
 
-    .stat-icon {
-        width: 38px !important;
-        height: 38px !important;
-        font-size: 16px !important;
-    }
-
-    .stat-value {
-        font-size: 16px !important;
-    }
-
-    /* --- TABEL RESPONSIF SELULER --- */
-    .table-responsive {
-        width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    .table th, .table td {
-        padding: 8px 10px !important;
-        font-size: 0.78rem !important;
-        white-space: nowrap;
-    }
-
-    /* --- TOMBOL & FORM INPUT --- */
-    .btn {
-        padding: 8px 12px !important;
-        font-size: 0.8rem !important;
-    }
-
-    .form-input {
-        padding: 8px 10px !important;
-    }
-
-    /* ==========================================
-       POIN 2: MODAL LAYAR PENUH DI HP (<= 768px)
-       ========================================== */
-    /* Hilangkan padding overlay agar modal menempel ke pinggir layar */
+    /* 5. MODAL FULLSCREEN DI HP */
     .modal-overlay {
         padding: 0 !important;
         align-items: flex-start !important;
     }
 
-    /* Ubah kotak modal menjadi seukuran layar HP */
     .modal-box {
         width: 100vw !important;
         max-width: 100vw !important;
         height: 100vh !important;
-        max-height: 100vh !important;
+        height: 100dvh !important;
         border-radius: 0 !important;
         margin: 0 !important;
         display: flex !important;
         flex-direction: column !important;
-        box-shadow: none !important;
     }
 
-    /* Header modal menempel di atas */
-    .modal-header {
-        position: sticky;
-        top: 0;
-        background: #ffffff;
-        z-index: 10;
-        border-bottom: 1px solid #e2e8f0;
-        padding: 14px 16px;
-    }
-
-    /* Area formulir dapat di-scroll dengan lancar */
     .modal-body {
         flex: 1 !important;
         overflow-y: auto !important;
         padding: 16px !important;
-        -webkit-overflow-scrolling: touch;
     }
 
-    /* Tombol penutup & simpan menempel di bawah */
     .modal-footer {
         position: sticky;
         bottom: 0;
         background: #ffffff;
-        z-index: 10;
         border-top: 1px solid #e2e8f0;
         padding: 12px 16px;
+        z-index: 10;
     }
 
-    /* ==========================================
-       POIN 3: TOMBOL AKSI MENEMPEL DI BAWAH (MODE A & MODE B)
-       ========================================== */
-    /* Menargetkan kontainer tombol simpan/aksi pada form penilaian */
+    /* 6. TOMBOL SIMPAN STICKY & PERBESAR SENTUHAN JEMPOL */
+    button, 
+    .btn, 
+    .form-input, 
+    select, 
+    input {
+        min-height: 44px !important;
+        font-size: 14px !important;
+    }
+
     .form-actions,
-    .action-bar,
-    .btn-submit-container,
-    #form-penilaian .form-group:last-child {
+    .action-bar {
         position: sticky !important;
         bottom: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
         background: #ffffff !important;
-        padding: 12px 16px !important;
+        padding: 12px !important;
         border-top: 1px solid #e2e8f0 !important;
-        box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08) !important;
-        z-index: 90 !important;
-        display: flex !important;
-        gap: 8px !important;
-        margin-top: 16px !important;
-        margin-bottom: 0 !important;
-    }
-
-    .form-actions .btn,
-    .action-bar .btn,
-    .btn-submit-container .btn {
-        flex: 1 !important;
-        margin: 0 !important;
-    }
-
-    /* ==========================================
-       POIN 5: AREA SENTUH JEMPOL (TOUCH TARGETS)
-       ========================================== */
-    /* Tombol & Input Memiliki Tinggi Minimal 46px */
-    button,
-    .btn,
-    .form-input,
-    select,
-    input[type="text"],
-    input[type="number"],
-    input[type="date"],
-    input[type="email"],
-    input[type="password"] {
-        min-height: 46px !important;
-        font-size: 14px !important;
-        border-radius: 8px !important;
-    }
-
-    /* Area Sentuh Tombol Garis 3 (Hamburger) */
-    .btn-hamburger,
-    .menu-toggle,
-    .sidebar-toggle,
-    .topbar-toggle {
-        min-width: 44px !important;
-        min-height: 44px !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        font-size: 22px !important;
-        padding: 8px !important;
-    }
-
-    /* Tombol Aksi di Kartu Data */
-    .table-responsive .btn,
-    .table .btn {
-        min-height: 38px !important;
-        padding: 6px 12px !important;
-        font-size: 13px !important;
-    }
-
-    /* Checkbox & Radio Button Dibuat Lebih Besar */
-    input[type="checkbox"],
-    input[type="radio"] {
-        width: 22px !important;
-        height: 22px !important;
-        margin-right: 8px !important;
-        cursor: pointer;
-    }
-
-    /* Jarak Antar Item Menu Sidebar Agar Bebas Salah Tekan */
-    .sidebar-menu li a,
-    .sidebar-nav a,
-    .sidebar a {
-        padding: 14px 16px !important;
-        min-height: 48px !important;
-        display: flex !important;
-        align-items: center !important;
-        font-size: 14px !important;
-    }
-}
-
-/* ==================================================== */
-/* PENYESUAIAN LAYAR HP KECIL (max-width: 480px)        */
-/* ==================================================== */
-@media (max-width: 480px) {
-    .flex-between {
-        flex-direction: column;
-        align-items: flex-start !important;
-        gap: 10px;
-    }
-
-    .action-buttons {
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-    }
-
-    .action-buttons .btn {
-        width: 100%;
-    }
-}
-
-/* ==========================================
-   POIN 1: CARD VIEW UNTUK TABEL DI HP (<= 768px)
-   ========================================== */
-@media (max-width: 768px) {
-    /* Sembunyikan header tabel desktop */
-    .table-responsive table.table thead {
-        display: none !important;
-    }
-
-    .table-responsive table.table,
-    .table-responsive table.table tbody {
-        display: block;
-        width: 100%;
-    }
-
-    /* Ubah setiap baris tabel (tr) menjadi kartu melayang */
-    .table-responsive table.table tbody tr {
-        display: block;
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 12px 14px;
-        margin-bottom: 12px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-    }
-
-    /* Format sel tabel (td) di dalam kartu
-       (!important ditambahkan agar menimpa aturan ".table th, .table td" di atas) */
-    .table-responsive table.table tbody td {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 8px 0 !important;
-        border-bottom: 1px dashed #edf2f7;
-        font-size: 13px !important;
-        white-space: normal !important;
-        text-align: right;
-    }
-
-    /* Baris/tombol aksi di bagian bawah kartu */
-    .table-responsive table.table tbody td:last-child {
-        border-bottom: none;
-        padding-top: 10px !important;
-        justify-content: flex-end;
-        gap: 6px;
-    }
-
-    /* Penekanan teks utama (seperti Nama Siswa / Guru) */
-    .table-responsive table.table tbody td strong {
-        font-size: 14px;
-        color: #1e293b;
-    }
-
-    /* Penyesuaian tombol aksi agar proporsional di HP */
-    .table-responsive table.table tbody td .btn {
-        flex: 1;
-        padding: 6px 10px !important;
-        font-size: 12px !important;
-        justify-content: center;
-    }
-}
-
-/* ==========================================
-   NAVIGASI ATAS GAYA FACEBOOK MOBILE
-   ========================================== */
-
-/* Sembunyikan di layar desktop secara default */
-.mobile-nav-tabs {
-    display: none;
-}
-
-@media (max-width: 768px) {
-    /* 1. Header Utama */
-    .topbar {
-        position: sticky !important;
-        top: 0 !important;
-        z-index: 1000 !important;
-        background: #ffffff !important;
-        border-bottom: 1px solid #f0f2f5;
-        padding: 10px 16px !important;
-    }
-
-    /* 2. Bar Tab Navigasi di Bawah Header */
-    .mobile-nav-tabs {
-        display: flex !important;
-        position: sticky !important;
-        top: 56px !important; /* Sama dengan tinggi .topbar (56px) agar tidak tumpang tindih */
-        z-index: 999 !important;
-        background: #ffffff !important;
-        border-bottom: 1px solid #e4e6eb;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
-    }
-
-    .nav-tab {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 8px 0 6px 0;
-        background: none;
-        border: none;
-        border-bottom: 3px solid transparent;
-        color: #65676b;
-        cursor: pointer;
-        transition: all 0.15s ease;
-        /* Menimpa aturan umum "button" di Poin 5 (radius 8px & min-height 46px)
-           supaya garis biru tab aktif tetap lurus ala Facebook */
-        border-radius: 0 !important;
-        min-height: 0 !important;
-    }
-
-    .nav-tab .tab-icon {
-        font-size: 20px;
-        line-height: 1;
-    }
-
-    .nav-tab .tab-label {
-        font-size: 10px;
-        font-weight: 600;
-        margin-top: 3px;
-    }
-
-    /* Tab Aktif (Garis Biru Khas FB) */
-    .nav-tab.active {
-        color: #1877f2 !important;
-        border-bottom-color: #1877f2 !important;
+        box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
+        z-index: 80 !important;
     }
 }
