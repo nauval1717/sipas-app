@@ -1,4 +1,8 @@
+/* ==================================================== */
+/* PENYESUAIAN KHUSUS LAYAR HP & TABLET (max-width: 768px) */
+/* ==================================================== */
 @media (max-width: 768px) {
+    /* --- NAVIGASI & SIDEBAR --- */
     .sidebar {
         transform: translateX(-100%);
     }
@@ -31,17 +35,114 @@
         display: block;
     }
 
-    .content-body {
-        padding: 16px;
+    .topbar {
+        padding: 0 16px;
+        height: 56px;
     }
 
+    .content-body {
+        padding: 12px;
+    }
+
+    /* --- PENYESUAIAN UKURAN TEKS HP (AGAR RAPI & TIDAK KEBESARAN) --- */
+    h1 { font-size: 1.2rem !important; }
+    h2 { font-size: 1.05rem !important; }
+    h3 { font-size: 0.95rem !important; }
+    h4 { font-size: 0.85rem !important; }
+    body, p, label, input, select, textarea { font-size: 0.85rem !important; }
+    small { font-size: 0.75rem !important; }
+
+    /* --- LAYOUT GRID & KARTU --- */
     .stats-grid {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+    }
+
+    .card {
+        padding: 14px !important;
+        margin-bottom: 12px !important;
+        border-radius: 8px !important;
+    }
+
+    .stat-card {
+        padding: 12px !important;
+        gap: 10px !important;
+    }
+
+    .stat-icon {
+        width: 38px !important;
+        height: 38px !important;
+        font-size: 16px !important;
+    }
+
+    .stat-value {
+        font-size: 16px !important;
+    }
+
+    /* --- TABEL RESPONSIF SELULER --- */
+    .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .table th, .table td {
+        padding: 8px 10px !important;
+        font-size: 0.78rem !important;
+        white-space: nowrap;
+    }
+
+    /* --- TOMBOL & FORM INPUT --- */
+    .btn {
+        padding: 8px 12px !important;
+        font-size: 0.8rem !important;
+    }
+
+    .form-input {
+        padding: 8px 10px !important;
+    }
+
+    /* --- BOX DIALOG / MODAL DI HP --- */
+    .modal-overlay {
+        padding: 12px !important;
+    }
+
+    .modal-box {
+        width: 100% !important;
+        max-height: 90vh !important;
+        overflow-y: auto !important;
+        padding: 16px !important;
+        border-radius: 10px !important;
     }
 }
 
+/* ==================================================== */
+/* PENYESUAIAN LAYAR HP KECIL (max-width: 480px)        */
+/* ==================================================== */
 @media (max-width: 480px) {
     .stats-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr !important;
+    }
+
+    .flex-between {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 10px;
+    }
+
+    .action-buttons {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .action-buttons .btn {
+        width: 100%;
     }
 }
