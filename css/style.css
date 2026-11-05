@@ -172,6 +172,28 @@ body {
     gap: 16px;
 }
 
+/* Tampilan Header Profil Kanan Atas */
+.user-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    line-height: 1.2;
+}
+
+.user-name {
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--text-main);
+}
+
+.user-role {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--primary-color);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
 .btn-hamburger {
     display: none;
     background: none;
