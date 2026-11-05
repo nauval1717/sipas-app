@@ -124,27 +124,30 @@
                 
                 <!-- 1. DASHBOARD UTAMA -->
                 <section id="page-dashboard" class="page-section">
-                    <!-- Header & Baris Filter -->
-                    <div class="card mb-4">
-                        <div class="card-body flex-between" style="flex-wrap: wrap; gap: 15px;">
-                            <div>
-                                <h2 style="margin: 0;">Ringkasan Kinerja Sikap Siswa</h2>
-                                <small class="text-muted" id="dash-role-badge">Memuat status peran...</small>
-                            </div>
-                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                <select id="dash-filter-ta" class="form-input" onchange="loadDashboardData()" style="width: auto;">
-                                    <option value="">-- Semua Tahun Ajaran --</option>
-                                </select>
-                                <select id="dash-filter-semester" class="form-input" onchange="loadDashboardData()" style="width: auto;">
-                                    <option value="">-- Semua Semester --</option>
-                                    <option value="Ganjil">Ganjil</option>
-                                    <option value="Genap">Genap</option>
-                                </select>
-                                <button class="btn btn-secondary" onclick="loadDashboardData()">🔄 Perbarui</button>
-                            </div>
-                        </div>
-                    </div>
-
+                    <!-- Header & Baris Filter Dashboard -->
+<div class="card mb-4">
+    <div class="card-body flex-between" style="flex-wrap: wrap; gap: 15px;">
+        <div>
+            <h2 style="margin: 0;">Ringkasan Kinerja Sikap Siswa</h2>
+            <small class="text-muted" id="dash-role-badge">Memuat status peran...</small>
+        </div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; width: 100%;">
+            <select id="dash-filter-ta" class="form-input" onchange="loadDashboardData()" style="flex: 1; min-width: 130px;">
+                <option value="">-- Semua TA --</option>
+            </select>
+            <select id="dash-filter-semester" class="form-input" onchange="loadDashboardData()" style="flex: 1; min-width: 120px;">
+                <option value="">-- Semester --</option>
+                <option value="Ganjil">Ganjil</option>
+                <option value="Genap">Genap</option>
+            </select>
+            <!-- FILTER DARI & SAMPAI TANGGAL/BULAN BARU -->
+            <input type="date" id="dash-date-start" class="form-input" onchange="loadDashboardData()" style="flex: 1; min-width: 130px;" title="Dari Tanggal">
+            <input type="date" id="dash-date-end" class="form-input" onchange="loadDashboardData()" style="flex: 1; min-width: 130px;" title="Sampai Tanggal">
+            
+            <button class="btn btn-secondary" onclick="loadDashboardData()">🔄 Perbarui</button>
+        </div>
+    </div>
+</div>
                     <!-- Ringkasan Kartu Statistik (5 Kartu Utama) -->
                     <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
                         <div class="stat-card">
