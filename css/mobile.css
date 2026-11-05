@@ -251,3 +251,84 @@ html, body {
         left: 0 !important;
     }
 }
+
+/* =========================================================
+   PERBAIKAN TOTAL: NETRALKAN GRID DESKTOP & LAYOUT CONDONG
+   ========================================================= */
+
+@media (max-width: 768px) {
+    /* 1. NETRALKAN PEMBUNGKUS UTAMA (HAPUS RUANG 2 KOLOM DESKTOP) */
+    html, body, 
+    #app, 
+    .app-container, 
+    .dashboard-container, 
+    .dashboard-layout, 
+    .layout-wrapper, 
+    .wrapper, 
+    .main-wrapper,
+    .container-fluid {
+        display: block !important;
+        grid-template-columns: none !important; /* Matikan sistem kolom grid */
+        flex-direction: column !important;
+        width: 100% !important;
+        max-width: 100vw !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow-x: hidden !important;
+    }
+
+    /* 2. KELUARKAN SIDEBAR DARI ALUR LAYAR (HANYA MELAYANG SAAT DIKLIK) */
+    .sidebar,
+    aside,
+    #sidebar {
+        position: fixed !important;
+        top: 0 !important;
+        left: -300px !important; /* Tersembunyi total di luar layar kiri */
+        width: 270px !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        z-index: 99999 !important;
+        margin: 0 !important;
+        transition: left 0.3s ease-in-out !important;
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    /* Saat Tombol Garis 3 Diklik -> Sidebar Meluncur Keluar */
+    .sidebar.active,
+    .sidebar.show,
+    .sidebar.open,
+    body.sidebar-open .sidebar,
+    body.sidebar-active .sidebar {
+        left: 0 !important;
+    }
+
+    /* 3. PAKSA KONTEN UTAMA MEMENUHI 100% LAYAR HP (TANPA KOSONG DI KIRI) */
+    .main-content,
+    .content-wrapper,
+    .main,
+    #main-content,
+    .content,
+    .page-content {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding: 12px !important;
+        box-sizing: border-box !important;
+        display: block !important;
+    }
+
+    /* 4. TOPBAR (HEADER) FULL WIDTH DI ATAS */
+    .topbar,
+    header,
+    .header {
+        width: 100% !important;
+        margin-left: 0 !important;
+        left: 0 !important;
+        box-sizing: border-box !important;
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 1000 !important;
+        background: #ffffff !important;
+    }
+}
