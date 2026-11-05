@@ -406,3 +406,71 @@
         justify-content: center;
     }
 }
+
+/* ==========================================
+   NAVIGASI ATAS GAYA FACEBOOK MOBILE
+   ========================================== */
+
+/* Sembunyikan di layar desktop secara default */
+.mobile-nav-tabs {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    /* 1. Header Utama */
+    .topbar {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 1000 !important;
+        background: #ffffff !important;
+        border-bottom: 1px solid #f0f2f5;
+        padding: 10px 16px !important;
+    }
+
+    /* 2. Bar Tab Navigasi di Bawah Header */
+    .mobile-nav-tabs {
+        display: flex !important;
+        position: sticky !important;
+        top: 56px !important; /* Sama dengan tinggi .topbar (56px) agar tidak tumpang tindih */
+        z-index: 999 !important;
+        background: #ffffff !important;
+        border-bottom: 1px solid #e4e6eb;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+    }
+
+    .nav-tab {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 0 6px 0;
+        background: none;
+        border: none;
+        border-bottom: 3px solid transparent;
+        color: #65676b;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        /* Menimpa aturan umum "button" di Poin 5 (radius 8px & min-height 46px)
+           supaya garis biru tab aktif tetap lurus ala Facebook */
+        border-radius: 0 !important;
+        min-height: 0 !important;
+    }
+
+    .nav-tab .tab-icon {
+        font-size: 20px;
+        line-height: 1;
+    }
+
+    .nav-tab .tab-label {
+        font-size: 10px;
+        font-weight: 600;
+        margin-top: 3px;
+    }
+
+    /* Tab Aktif (Garis Biru Khas FB) */
+    .nav-tab.active {
+        color: #1877f2 !important;
+        border-bottom-color: #1877f2 !important;
+    }
+}
