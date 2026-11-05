@@ -146,3 +146,65 @@
         width: 100%;
     }
 }
+
+/* ==========================================
+   POIN 1: CARD VIEW UNTUK TABEL DI HP (<= 768px)
+   ========================================== */
+@media (max-width: 768px) {
+    /* Sembunyikan header tabel desktop */
+    .table-responsive table.table thead {
+        display: none !important;
+    }
+
+    .table-responsive table.table,
+    .table-responsive table.table tbody {
+        display: block;
+        width: 100%;
+    }
+
+    /* Ubah setiap baris tabel (tr) menjadi kartu melayang */
+    .table-responsive table.table tbody tr {
+        display: block;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 12px 14px;
+        margin-bottom: 12px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    }
+
+    /* Format sel tabel (td) di dalam kartu
+       (!important ditambahkan agar menimpa aturan ".table th, .table td" di atas) */
+    .table-responsive table.table tbody td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0 !important;
+        border-bottom: 1px dashed #edf2f7;
+        font-size: 13px !important;
+        white-space: normal !important;
+        text-align: right;
+    }
+
+    /* Baris/tombol aksi di bagian bawah kartu */
+    .table-responsive table.table tbody td:last-child {
+        border-bottom: none;
+        padding-top: 10px !important;
+        justify-content: flex-end;
+        gap: 6px;
+    }
+
+    /* Penekanan teks utama (seperti Nama Siswa / Guru) */
+    .table-responsive table.table tbody td strong {
+        font-size: 14px;
+        color: #1e293b;
+    }
+
+    /* Penyesuaian tombol aksi agar proporsional di HP */
+    .table-responsive table.table tbody td .btn {
+        flex: 1;
+        padding: 6px 10px !important;
+        font-size: 12px !important;
+        justify-content: center;
+    }
+}
