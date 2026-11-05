@@ -1,7 +1,7 @@
 let dashboardChartInstance = null;
 let cacheMasterKelasDashboard = [];
-let dashboardRealtimeChannel = null;   // [BARU]
-let dashboardRealtimeTimer = null;     // [BARU]
+let dashboardRealtimeChannel = null;
+let dashboardRealtimeTimer = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('page-dashboard')) {
@@ -12,13 +12,13 @@ document.addEventListener('DOMContentLoaded', () => {
 async function initDashboard() {
     if (!window.db) return;
     await populateDashboardFilters();
-    bindDashboardDateFilters();        // [BARU]
+    bindDashboardDateFilters();
     await loadDashboardData();
-    startDashboardRealtime();          // [BARU]
+    startDashboardRealtime();
 }
 
 // ----------------------------------------------------
-// [BARU] FILTER TANGGAL: otomatis muat ulang saat tanggal diganti
+// FILTER TANGGAL: otomatis muat ulang saat tanggal diganti
 // ----------------------------------------------------
 function bindDashboardDateFilters() {
     ['dash-date-start', 'dash-date-end'].forEach(id => {
@@ -31,7 +31,7 @@ function bindDashboardDateFilters() {
 }
 
 // ----------------------------------------------------
-// [BARU] REALTIME LISTENER: refresh dashboard saat guru lain input data
+// REALTIME LISTENER: refresh dashboard saat guru lain input data
 // ----------------------------------------------------
 function startDashboardRealtime() {
     if (!window.db || dashboardRealtimeChannel) return; // cegah subscribe ganda
@@ -59,7 +59,7 @@ async function populateDashboardFilters() {
     try {
         const { data: taData } = await window.db.from('tahun_ajaran').select('id, tahun').order('tahun', { ascending: false });
         if (taData && taData.length > 0) {
-            const currentVal = selectTA.value; // [DIUBAH] pilihan tidak hilang saat dipanggil ulang
+            const currentVal = selectTA.value;
             const taUnique = Array.from(new Set(taData.map(t => t.tahun)));
             selectTA.innerHTML = `<option value="">-- Semua Tahun Ajaran --</option>` +
                 taUnique.map(t => `<option value="${t}">${t}</option>`).join('');
@@ -78,8 +78,8 @@ async function loadDashboardData() {
 
     const filterTA = document.getElementById('dash-filter-ta')?.value || '';
     const filterSem = document.getElementById('dash-filter-semester')?.value || '';
-    const filterTglMulai = document.getElementById('dash-date-start')?.value || '';   // [BARU]
-    const filterTglSampai = document.getElementById('dash-date-end')?.value || '';    // [BARU]
+    const filterTglMulai = document.getElementById('dash-date-start')?.value || '';
+    const filterTglSampai = document.getElementById('dash-date-end')?.value || '';
     const userRole = window.currentUserRole || 'admin';
 
     // Sesuaikan Label Peran
@@ -99,13 +99,16 @@ async function loadDashboardData() {
             window.db.from('kelas').select('id, nama_kelas').order('nama_kelas')
         ]);
 
-        document.getElementById('stat-siswa').innerText = resSiswa.count || 0;
-        document.getElementById('stat-kelas').innerText = resKelas.count || 0;
-        document.getElementById('stat-guru').innerText = resGuru.count || 0;
+        const elSiswa = document.getElementById('stat-siswa');
+        const elKelas = document.getElementById('stat-kelas');
+        const elGuru = document.getElementById('stat-guru');
+        if (elSiswa) elSiswa.innerText = resSiswa.count || 0;
+        if (elKelas) elKelas.innerText = resKelas.count || 0;
+        if (elGuru) elGuru.innerText = resGuru.count || 0;
         cacheMasterKelasDashboard = resMasterKelas.data || [];
 
-        // B. Query Transaksi Penilaian Sikap (Tanpa Embed kelas_id yang Rentan Error)
-        let query = window.db                                                          // [DIUBAH] dari const { data, error } = await ...
+        // B. Query Transaksi Penilaian Sikap
+        let query = window.db
             .from('penilaian_sikap')
             .select(`
                 id,
@@ -122,11 +125,11 @@ async function loadDashboardData() {
                 pencatat:pencatat_id (nama_lengkap)
             `);
 
-        // [BARU] Filter rentang tanggal di sisi server
+        // Filter rentang tanggal di sisi server
         if (filterTglMulai) query = query.gte('tanggal', filterTglMulai);
         if (filterTglSampai) query = query.lte('tanggal', filterTglSampai);
 
-        const { data: records, error } = await query.order('created_at', { ascending: false }); // [DIUBAH]
+        const { data: records, error } = await query.order('created_at', { ascending: false });
 
         if (error) throw error;
 
@@ -148,8 +151,10 @@ async function loadDashboardData() {
         const totalPositif = filtered.filter(r => r.jenis_sikap === 'positif').length;
         const totalNegatif = filtered.filter(r => r.jenis_sikap === 'negatif').length;
 
-        document.getElementById('stat-positif').innerText = totalPositif;
-        document.getElementById('stat-negatif').innerText = totalNegatif;
+        const elPositif = document.getElementById('stat-positif');
+        const elNegatif = document.getElementById('stat-negatif');
+        if (elPositif) elPositif.innerText = totalPositif;
+        if (elNegatif) elNegatif.innerText = totalNegatif;
 
         // Render Komponen Dashboard
         renderDashboardChart(totalPositif, totalNegatif);
@@ -281,20 +286,23 @@ function renderRekapKelasDashboard(records) {
 }
 
 // ----------------------------------------------------
-// 6. RENDER TABEL CATATAN TERBARU
+// 6. RENDER TABEL CATATAN TERBARU (Dashboard & Input Penilaian sekaligus)
 // ----------------------------------------------------
 function renderRecentAssessmentsTable(recentList) {
-    const tbody = document.getElementById('table-recent-assessments');
-    if (!tbody) return;
+    // Ambil SEMUA elemen ber-ID table-recent-assessments
+    const tables = document.querySelectorAll('#table-recent-assessments');
+    if (!tables.length) return;
 
-    if (recentList.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Belum ada data penilaian.</td></tr>`;
+    if (!recentList || recentList.length === 0) {
+        tables.forEach(table => {
+            table.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Belum ada data penilaian.</td></tr>`;
+        });
         return;
     }
 
-    tbody.innerHTML = recentList.map(r => `
+    const rowsHtml = recentList.map(r => `
         <tr>
-            <td><small>${new Date(r.tanggal).toLocaleDateString('id-ID')}</small></td>
+            <td><small>${r.tanggal ? new Date(r.tanggal).toLocaleDateString('id-ID') : '-'}</small></td>
             <td><strong>${r.siswa?.nama_lengkap || '-'}</strong></td>
             <td>${r.kelas?.nama_kelas || '-'}</td>
             <td>
@@ -302,10 +310,15 @@ function renderRecentAssessmentsTable(recentList) {
                     ${r.jenis_sikap === 'positif' ? 'POSITIF' : 'NEGATIF'}
                 </span>
             </td>
-            <td>${r.master_perilaku?.nama_perilaku || '-'}</td>
+            <td>${r.master_perilaku?.nama_perilaku || '-'}${r.catatan ? `<br><small class="text-muted">${r.catatan}</small>` : ''}</td>
             <td><small>${r.pencatat?.nama_lengkap || 'Sistem'}</small></td>
         </tr>
     `).join('');
+
+    // Isi semua tabel sekaligus
+    tables.forEach(table => {
+        table.innerHTML = rowsHtml;
+    });
 }
 
 // Pemicu otomatis saat berpindah halaman ke Dashboard
