@@ -286,40 +286,133 @@ function renderRekapKelasDashboard(records) {
 }
 
 // ----------------------------------------------------
-// 6. RENDER TABEL CATATAN TERBARU (Dashboard & Input Penilaian sekaligus)
+// 6. RENDER TABEL CATATAN TERBARU + AKSI EDIT & HAPUS
 // ----------------------------------------------------
+let cacheRecentAssessments = [];
+
+function escapeHtml(str) {
+    return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 function renderRecentAssessmentsTable(recentList) {
-    // Ambil SEMUA elemen ber-ID table-recent-assessments
     const tables = document.querySelectorAll('#table-recent-assessments');
     if (!tables.length) return;
 
-    if (!recentList || recentList.length === 0) {
+    cacheRecentAssessments = recentList || [];
+
+    if (cacheRecentAssessments.length === 0) {
         tables.forEach(table => {
-            table.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Belum ada data penilaian.</td></tr>`;
+            table.innerHTML = `<tr><td colspan="7" class="text-center text-muted">Belum ada data penilaian.</td></tr>`;
         });
         return;
     }
 
-    const rowsHtml = recentList.map(r => `
+    const rowsHtml = cacheRecentAssessments.map(r => `
         <tr>
             <td><small>${r.tanggal ? new Date(r.tanggal).toLocaleDateString('id-ID') : '-'}</small></td>
-            <td><strong>${r.siswa?.nama_lengkap || '-'}</strong></td>
-            <td>${r.kelas?.nama_kelas || '-'}</td>
+            <td><strong>${escapeHtml(r.siswa?.nama_lengkap) || '-'}</strong></td>
+            <td>${escapeHtml(r.kelas?.nama_kelas) || '-'}</td>
             <td>
                 <span class="badge ${r.jenis_sikap === 'positif' ? 'bg-green' : 'bg-red'}">
                     ${r.jenis_sikap === 'positif' ? 'POSITIF' : 'NEGATIF'}
                 </span>
             </td>
-            <td>${r.master_perilaku?.nama_perilaku || '-'}${r.catatan ? `<br><small class="text-muted">${r.catatan}</small>` : ''}</td>
-            <td><small>${r.pencatat?.nama_lengkap || 'Sistem'}</small></td>
+            <td>${escapeHtml(r.master_perilaku?.nama_perilaku) || '-'}${r.catatan ? `<br><small class="text-muted">${escapeHtml(r.catatan)}</small>` : ''}</td>
+            <td><small>${escapeHtml(r.pencatat?.nama_lengkap) || 'Sistem'}</small></td>
+            <td class="text-center">
+                <div style="display:flex; gap:6px; justify-content:center;">
+                    <button class="btn btn-secondary" style="padding:4px 8px; font-size:12px;"
+                        onclick="openModalEditPenilaian('${r.id}')">✏️ Edit</button>
+                    <button class="btn btn-danger" style="padding:4px 8px; font-size:12px;"
+                        onclick="hapusPenilaian('${r.id}')">🗑️ Hapus</button>
+                </div>
+            </td>
         </tr>
     `).join('');
 
-    // Isi semua tabel sekaligus
     tables.forEach(table => {
         table.innerHTML = rowsHtml;
     });
 }
+
+// ----------------------------------------------------
+// HAPUS PENILAIAN
+// ----------------------------------------------------
+async function hapusPenilaian(id) {
+    if (!confirm("Apakah Anda yakin ingin menghapus data penilaian ini?")) return;
+
+    try {
+        const { data, error } = await window.db
+            .from('penilaian_sikap')
+            .delete()
+            .eq('id', id)
+            .select('id');
+
+        if (error) throw error;
+        if (!data || data.length === 0) {
+            throw new Error("Data tidak terhapus (kemungkinan tidak ada izin/RLS).");
+        }
+
+        if (typeof showToast === 'function') showToast('🗑️ Data penilaian berhasil dihapus', 'info');
+        loadDashboardData();
+    } catch (err) {
+        alert("Gagal menghapus data: " + err.message);
+    }
+}
+
+// ----------------------------------------------------
+// EDIT PENILAIAN (buka modal, lalu simpan)
+// ----------------------------------------------------
+function openModalEditPenilaian(id) {
+    const modal = document.getElementById('modal-edit-penilaian');
+    const inputId = document.getElementById('edit-penilaian-id');
+    const inputCatatan = document.getElementById('edit-catatan-baru');
+    if (!modal || !inputId || !inputCatatan) return;
+
+    const item = cacheRecentAssessments.find(r => String(r.id) === String(id));
+    inputId.value = id;
+    inputCatatan.value = item?.catatan || '';
+    modal.classList.remove('hidden');
+}
+
+function closeModalEditPenilaian() {
+    document.getElementById('modal-edit-penilaian')?.classList.add('hidden');
+}
+
+async function simpanEditPenilaian() {
+    const id = document.getElementById('edit-penilaian-id')?.value;
+    const catatanBaru = document.getElementById('edit-catatan-baru')?.value.trim() || null;
+    if (!id) return;
+
+    try {
+        const { data, error } = await window.db
+            .from('penilaian_sikap')
+            .update({ catatan: catatanBaru })
+            .eq('id', id)
+            .select('id');
+
+        if (error) throw error;
+        if (!data || data.length === 0) {
+            throw new Error("Data tidak berubah (kemungkinan tidak ada izin/RLS).");
+        }
+
+        closeModalEditPenilaian();
+        if (typeof showToast === 'function') showToast('✅ Catatan berhasil diperbarui', 'success');
+        loadDashboardData();
+    } catch (err) {
+        alert("Gagal menyimpan perubahan: " + err.message);
+    }
+}
+
+window.hapusPenilaian = hapusPenilaian;
+window.openModalEditPenilaian = openModalEditPenilaian;
+window.closeModalEditPenilaian = closeModalEditPenilaian;
+window.simpanEditPenilaian = simpanEditPenilaian;
 
 // Pemicu otomatis saat berpindah halaman ke Dashboard
 const prevSwitchPageDash = window.switchPage;
