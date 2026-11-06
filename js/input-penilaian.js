@@ -219,7 +219,7 @@ async function savePenilaian(event) {
 
         if (error) throw error;
 
-        if (window.showToast) showToast("Penilaian sikap berhasil dicatat!", "success");
+        if (window.showToast) afterSaveSuccess('✅ Penilaian berhasil disimpan ke sistem!');
 
         document.getElementById('select-siswa').value = '';
         document.getElementById('select-perilaku').value = '';
@@ -243,6 +243,19 @@ function resetFormPenilaian() {
     onPenilaianKelasChange();
     updatePerilakuDropdown();
     if (window.showToast) showToast("Formulir direset.", "info");
+}
+function afterSaveSuccess(pesan) {
+    if (typeof showToast === 'function') {
+        showToast(pesan, 'success');
+    } else {
+        alert(pesan);
+    }
+
+    setTimeout(() => {
+        if (typeof switchPage === 'function') {
+            switchPage('dashboard');
+        }
+    }, 1000);
 }
 
 // ----------------------------------------------------
@@ -439,7 +452,7 @@ async function savePenilaianModeA(event) {
         if (error) throw error;
 
         const successCount = data ? data.length : payload.length;
-        if (window.showToast) showToast(`Berhasil menyimpan ${successCount} catatan sekaligus!`, "success");
+        if (window.showToast) afterSaveSuccess(`✅ ${successCount} catatan berhasil disimpan ke sistem!`);
 
         resetModeA();
         await loadRecentPenilaianTable();
@@ -695,7 +708,7 @@ async function confirmAndSaveModeB() {
         if (error) throw error;
 
         const insertedCount = data ? data.length : payload.length;
-        if (window.showToast) showToast(`Berhasil menyimpan ${insertedCount} catatan sikap ke Supabase!`, "success");
+        if (window.showToast) afterSaveSuccess(`✅ ${insertedCount} catatan berhasil disimpan ke sistem!`);
 
         closeModal('modal-preview-mode-b');
         resetModeB();
