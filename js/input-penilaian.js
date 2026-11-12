@@ -21,6 +21,33 @@ let modeARows = []; // array of object: { id, jenis, kategori_id, perilaku_id, t
 let modeBSelectedSiswaIds = new Set();
 let modeBPendingRecords = []; // array of object record yang siap disimpan
 
+let modeBTempIdCounter = 0;
+
+// ----------------------------------------------------
+// HELPER UMUM
+// ----------------------------------------------------
+// Tanggal hari ini sesuai zona waktu perangkat (toISOString() memakai UTC -> bisa mundur 1 hari sebelum jam 07.00 WIB)
+function getTodayLocal() {
+    const d = new Date();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${d.getFullYear()}-${m}-${day}`;
+}
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function isValidUuid(v) {
+    return typeof v === 'string' && UUID_REGEX.test(v);
+}
+
+function escHtmlPenilaian(str) {
+    return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('page-input-penilaian')) {
         initInputPenilaian();
@@ -31,7 +58,7 @@ async function initInputPenilaian() {
     if (!window.db) return;
 
     // Set default tanggal ke hari ini
-    const today = new Date().toISOString().split('T')[0];
+    const today = getTodayLocal();
     ['input-tanggal', 'modeb-bulk-tanggal'].forEach(id => {
         const el = document.getElementById(id);
         if (el && !el.value) el.value = today;
@@ -79,7 +106,10 @@ function renderAllKelasDropdowns() {
 
     ['select-kelas', 'modea-select-kelas', 'modeb-select-kelas'].forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.innerHTML = options;
+        if (!el) return;
+        const prev = el.value; // simpan pilihan sebelum dirender ulang
+        el.innerHTML = options;
+        if (prev && cachePenilaianDep.kelas.some(k => k.id === prev)) el.value = prev;
     });
 }
 
@@ -89,7 +119,10 @@ function renderAllKategoriDropdowns() {
 
     ['select-kategori', 'modeb-bulk-kategori'].forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.innerHTML = options;
+        if (!el) return;
+        const prev = el.value;
+        el.innerHTML = options;
+        if (prev && cachePenilaianDep.kategori.some(k => k.id === prev)) el.value = prev;
     });
 }
 
@@ -172,11 +205,13 @@ function updatePerilakuDropdown() {
         filtered = filtered.filter(p => p.kategori_id === kategoriVal);
     }
 
+    const prevPerilaku = elPerilaku.value;
     if (filtered.length === 0) {
         elPerilaku.innerHTML = `<option value="">-- Tidak ada pilihan perilaku --</option>`;
     } else {
         elPerilaku.innerHTML = `<option value="">-- Pilih Perilaku Sikap --</option>` +
-            filtered.map(p => `<option value="${p.id}">${p.nama_perilaku}</option>`).join('');
+            filtered.map(p => `<option value="${p.id}">${escHtmlPenilaian(p.nama_perilaku)}</option>`).join('');
+        if (prevPerilaku && filtered.some(p => p.id === prevPerilaku)) elPerilaku.value = prevPerilaku;
     }
 }
 
@@ -239,7 +274,7 @@ function resetFormPenilaian() {
     const form = document.getElementById('form-penilaian');
     if (form) form.reset();
     const inputTanggal = document.getElementById('input-tanggal');
-    if (inputTanggal) inputTanggal.value = new Date().toISOString().split('T')[0];
+    if (inputTanggal) inputTanggal.value = getTodayLocal();
     onPenilaianKelasChange();
     updatePerilakuDropdown();
     if (window.showToast) showToast("Formulir direset.", "info");
@@ -288,7 +323,7 @@ function onModeAKelasChange() {
 function addModeARow() {
     modeARowIdCounter++;
     const rowId = modeARowIdCounter;
-    const today = new Date().toISOString().split('T')[0];
+    const today = getTodayLocal();
 
     modeARows.push({
         id: rowId,
@@ -365,7 +400,7 @@ function renderModeARows() {
                     </div>
                     <div class="form-group mt-2">
                         <label>Keterangan / Catatan Kejadian</label>
-                        <input type="text" class="form-input" value="${row.catatan}" placeholder="Catatan singkat..." onchange="updateModeARowData(${row.id}, 'catatan', this.value)">
+                        <input type="text" class="form-input" value="${escHtmlPenilaian(row.catatan)}" placeholder="Catatan singkat..." onchange="updateModeARowData(${row.id}, 'catatan', this.value)">
                     </div>
                 </div>
             </div>
@@ -432,7 +467,7 @@ async function savePenilaianModeA(event) {
 
     // Susun Payload Batch Insert
     const payload = modeARows.map(r => ({
-        tanggal: r.tanggal || new Date().toISOString().split('T')[0],
+        tanggal: r.tanggal || getTodayLocal(),
         siswa_id,
         kelas_id,
         tahun_ajaran_id,
@@ -546,11 +581,13 @@ function updateModeBBulkPerilaku() {
     let filtered = cachePenilaianDep.perilaku.filter(p => p.jenis === jenis);
     if (kategoriId) filtered = filtered.filter(p => p.kategori_id === kategoriId);
 
+    const prevPerilaku = selectPerilaku.value;
     if (filtered.length === 0) {
         selectPerilaku.innerHTML = `<option value="">-- Tidak ada perilaku --</option>`;
     } else {
         selectPerilaku.innerHTML = `<option value="">-- Pilih Perilaku --</option>` +
-            filtered.map(p => `<option value="${p.id}">${p.nama_perilaku}</option>`).join('');
+            filtered.map(p => `<option value="${p.id}">${escHtmlPenilaian(p.nama_perilaku)}</option>`).join('');
+        if (prevPerilaku && filtered.some(p => p.id === prevPerilaku)) selectPerilaku.value = prevPerilaku;
     }
 }
 
@@ -570,6 +607,12 @@ function addBulkNoteToSelectedModeBSiswa() {
         return;
     }
 
+    const kelasIdTerpilih = document.getElementById('modeb-select-kelas').value;
+    if (!isValidUuid(kelasIdTerpilih) || !isValidUuid(perilakuId)) {
+        if (window.showToast) showToast("Kelas atau perilaku belum valid. Pilih ulang kelas & perilaku!", "error");
+        return;
+    }
+
     const perilakuObj = cachePenilaianDep.perilaku.find(p => p.id === perilakuId);
     const perilakuNama = perilakuObj ? perilakuObj.nama_perilaku : '-';
 
@@ -578,7 +621,8 @@ function addBulkNoteToSelectedModeBSiswa() {
         const siswaObj = cachePenilaianDep.siswa.find(s => s.id === siswaId);
         if (siswaObj) {
             modeBPendingRecords.push({
-                tempId: Date.now() + Math.random(),
+                tempId: ++modeBTempIdCounter,
+                kelas_id: kelasIdTerpilih,
                 siswa_id: siswaId,
                 siswa_nama: siswaObj.nama_lengkap,
                 tanggal,
@@ -624,14 +668,14 @@ function updateModeBPreviewTable() {
     tbody.innerHTML = modeBPendingRecords.map((r, index) => `
         <tr>
             <td>${index + 1}</td>
-            <td><strong>${r.siswa_nama}</strong></td>
+            <td><strong>${escHtmlPenilaian(r.siswa_nama)}</strong></td>
             <td><small>${new Date(r.tanggal).toLocaleDateString('id-ID')}</small></td>
             <td>
                 <span class="badge ${r.jenis_sikap === 'positif' ? 'text-success' : 'text-danger'}">
                     ${r.jenis_sikap.toUpperCase()}
-                </span> - <strong>${r.perilaku_nama}</strong>
+                </span> - <strong>${escHtmlPenilaian(r.perilaku_nama)}</strong>
             </td>
-            <td><small>${r.catatan || '-'}</small></td>
+            <td><small>${escHtmlPenilaian(r.catatan) || '-'}</small></td>
             <td>
                 <button type="button" class="btn btn-danger" style="padding: 2px 6px; font-size: 11px;" onclick="removeModeBPendingRecord(${r.tempId})">🗑️ Hapus</button>
             </td>
@@ -660,15 +704,15 @@ function renderModalModeBTable() {
     tbody.innerHTML = modeBPendingRecords.map((r, index) => `
         <tr>
             <td>${index + 1}</td>
-            <td><strong>${r.siswa_nama}</strong></td>
+            <td><strong>${escHtmlPenilaian(r.siswa_nama)}</strong></td>
             <td><small>${new Date(r.tanggal).toLocaleDateString('id-ID')}</small></td>
             <td>
                 <span class="badge ${r.jenis_sikap === 'positif' ? 'bg-green' : 'bg-red'}">
                     ${r.jenis_sikap.toUpperCase()}
                 </span>
             </td>
-            <td>${r.perilaku_nama}</td>
-            <td><small>${r.catatan || '-'}</small></td>
+            <td>${escHtmlPenilaian(r.perilaku_nama)}</td>
+            <td><small>${escHtmlPenilaian(r.catatan) || '-'}</small></td>
             <td>
                 <button type="button" class="btn btn-danger" style="padding: 2px 6px; font-size: 11px;" onclick="removeModeBPendingRecord(${r.tempId})">Hapus</button>
             </td>
@@ -681,23 +725,33 @@ async function confirmAndSaveModeB() {
     if (modeBPendingRecords.length === 0) return;
 
     const btnConfirm = document.getElementById('btn-confirm-save-modeb');
-    const kelas_id = document.getElementById('modeb-select-kelas').value;
-    const kelasObj = cachePenilaianDep.kelas.find(k => k.id === kelas_id);
-    const tahun_ajaran_id = kelasObj ? kelasObj.tahun_ajaran_id : null;
-    const pencatat_id = window.currentProfile?.id || null;
+    const pencatat_id = isValidUuid(window.currentProfile?.id) ? window.currentProfile.id : null;
 
-    // Susun Payload Akhir dari Antrean Pratinjau
-    const payload = modeBPendingRecords.map(r => ({
-        tanggal: r.tanggal,
-        siswa_id: r.siswa_id,
-        kelas_id,
-        tahun_ajaran_id,
-        perilaku_id: r.perilaku_id,
-        jenis_sikap: r.jenis_sikap,
-        catatan: r.catatan || null,
-        pencatat_id,
-        guru_id: pencatat_id
-    }));
+    // Validasi semua UUID SEBELUM dikirim ke Supabase (mencegah error: invalid input syntax for type uuid: "")
+    const recordBermasalah = modeBPendingRecords.find(r =>
+        !isValidUuid(r.siswa_id) || !isValidUuid(r.kelas_id) || !isValidUuid(r.perilaku_id)
+    );
+    if (recordBermasalah) {
+        if (window.showToast) showToast(`Data "${recordBermasalah.siswa_nama}" tidak valid (ID kosong). Hapus baris itu lalu tambahkan ulang.`, "error");
+        return;
+    }
+
+    // Susun Payload Akhir dari Antrean Pratinjau (kelas_id diambil dari record, bukan dari dropdown)
+    const payload = modeBPendingRecords.map(r => {
+        const kelasObj = cachePenilaianDep.kelas.find(k => k.id === r.kelas_id);
+        const tahun_ajaran_id = isValidUuid(kelasObj?.tahun_ajaran_id) ? kelasObj.tahun_ajaran_id : null;
+        return {
+            tanggal: r.tanggal,
+            siswa_id: r.siswa_id,
+            kelas_id: r.kelas_id,
+            tahun_ajaran_id,
+            perilaku_id: r.perilaku_id,
+            jenis_sikap: r.jenis_sikap,
+            catatan: r.catatan || null,
+            pencatat_id,
+            guru_id: pencatat_id
+        };
+    });
 
     try {
         isSubmittingPenilaian = true;
@@ -774,7 +828,7 @@ async function loadRecentPenilaianTable() {
                     <td><span class="badge ${badgeClass}">${p.jenis_sikap.toUpperCase()}</span></td>
                     <td>
                         <div><strong>${p.master_perilaku?.nama_perilaku || '-'}</strong></div>
-                        <small class="text-muted">${p.catatan ? `"${p.catatan}"` : '<em>Tanpa catatan</em>'}</small>
+                        <small class="text-muted">${p.catatan ? `"${escHtmlPenilaian(p.catatan)}"` : '<em>Tanpa catatan</em>'}</small>
                     </td>
                     <td>
                         <small>${pencatatNama}</small>
@@ -817,3 +871,10 @@ window.confirmAndSaveModeB = confirmAndSaveModeB;
 window.resetModeB = resetModeB;
 
 window.initInputPenilaian = initInputPenilaian;
+
+// Fungsi ini dipanggil tombol "Riwayat" tetapi belum pernah didefinisikan
+if (typeof window.viewHistoryPerubahan !== 'function') {
+    window.viewHistoryPerubahan = function () {
+        if (window.showToast) showToast("Fitur riwayat perubahan belum tersedia.", "info");
+    };
+}
